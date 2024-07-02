@@ -1,0 +1,5 @@
+sphinx>=3.0
+sphinx_rtd_theme
+sphinxcontrib-napoleon
+sphinx-autodoc-typehints
+# {{cookiecutter.project_slug}} uncomment the following line if your project is available on Pypi
