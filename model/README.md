@@ -1,0 +1,1 @@
+Download the model weigths form [here](https://drive.google.com/file/d/1AcrYCBR5-kg91C61boj221t1X_SVX8Hv/view) and save them in this folder.
