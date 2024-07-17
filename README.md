@@ -42,6 +42,8 @@ An analogous framowork has been developed to annotate fibroblasts on the images.
     pip install -e .
     ```
 
+7. Download the GOAT weights from [here](https://drive.google.com/file/d/1AcrYCBR5-kg91C61boj221t1X_SVX8Hv/view) and save them in the `model` folder without renaming it.
+
 ## Usage
 
 To use the tool open the terminal and activate the conda environment (`conda activate orga`), then use on of the following commands:
