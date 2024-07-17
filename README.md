@@ -24,20 +24,20 @@ An analogous framowork has been developed to annotate fibroblasts on the images.
 ## Installation
 
 1. Clone the repository on your local machine.
-2. ```shell
+    ```shell
     git clone https://github.com/HelmholtzAI-Consultants-Munich/Colorectal-Cancer-Organoids-Detection.git
     ```
-3. Install minocoda on you machine, you can find the offical installation instructions [here](https://docs.anaconda.com/miniconda/miniconda-install/).
-4. Create a new conda environment:
+2. Install minocoda on you machine, you can find the offical installation instructions [here](https://docs.anaconda.com/miniconda/miniconda-install/).
+3. Create a new conda environment:
     ```shell
     conda create -n orga python=3.12
     ``` 
-5. Activate the newly created environment
+4. Activate the newly created environment
     ```shell
     conda activate orga
     ``` 
-6. Navigate to the project directory in your terminal.
-7. Install the required dependencies by running in you terminal the folling command:
+5. Navigate to the project directory in your terminal.
+6. Install the required dependencies by running in you terminal the folling command:
     ```shell
     pip install -e .
     ```
