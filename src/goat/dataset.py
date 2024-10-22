@@ -49,16 +49,6 @@ def get_valid_transforms():
     )
 
 
-def get_inference_transforms():
-    return A.Compose(
-        [
-            #A.ToGray(p=1),
-            A.Resize(height=config.resize, width=config.resize, p=1.0),
-        ],
-        p=1.0,
-    )
-
-
 class InferenceMaskRCNNDataset(Dataset):
     def __init__(self, img_paths):
         """

@@ -44,11 +44,24 @@ An analogous framowork has been developed to annotate fibroblasts on the images.
 
 7. Download the GOAT weights from [here](https://drive.google.com/file/d/1AcrYCBR5-kg91C61boj221t1X_SVX8Hv/view) and save them in the `model` folder without renaming it.
 
-## Usage
+## Usage Instructions
 
-To use the tool open the terminal and activate the conda environment (`conda activate orga`), then use on of the following commands:
+To use the tool, first thing open the terminal and activate the conda environment (`conda activate orga`). The package contains different tools that can be used to perform the following functions:
 
-1. **Annotation:** 
+1. Annotate a given dataset of images.
+2. Merge the annotations genereted by two different annotators.
+3. Correct the merged annotation.
+
+Next, we describe in details what these tools do and how to use them, for more detailed information regarding the usage you can always refer to their help function:
+```shell
+<command_name> --help
+```
+
+### Image Annotation
+
+Given a dataset of microscopy images, these tools allow to annotate them with the aid of a GUI based on Napari. The user can generate bounding box annotations of the organoids and point annotations for the fibroblasts. When annotation organoids each image will be presented to the user with the predictions made by GOAT, which can be used as a baseline for the annotation. For clarity the baseline boxes are colored in <code style="color : blue">**blue**</code>, while the bpoxes manually added by the user are represented in <code style="color : magenta">**magenta**</code>.
+
+1. **Annotate:** 
 
     To run the annotation pipeline write the following command in the terminal and replace `dataset_path` with the actiual path on you machine. For annotating organoids run:
     ```shell
@@ -64,15 +77,38 @@ To use the tool open the terminal and activate the conda environment (`conda act
 
     To revie the images previously annotated the commands are similar to above, for organoids annotations run:
     ```shell
-    review_organoids -d=dataset_path
+    annotate_organoids -d=dataset_path -r
     ```
     and for fibroblasts annotations run:
-     ```shell
-    review_fibroblasts -d=dataset_path
+    ```shell
+    annotate_fibroblasts -d=dataset_path -r
     ```
 
     As before, during the execution type "**s**" to save the annotation and go to the next image, and type "**e**" to end the program.
 
+### Merging Multiple Annotations
+
+If two different annotators independelty annotated the same dataset it is possible to merge the two annotations. The tool uses the Hungarian algorithm to match boxes form the two annotators that have maximal Intesection over Union (IoU) score nad merges the "matching" boxes by averaging the edges. In additon, it is possible to set a minimum threshold for the IoU score below which two boxes are not matched by the algorithm (```-iou``` parameter). Finally, the user can decide whether to include or to discard the unmatched bounding boxes in the final annotation (```--keep``` or ```--drop``` flags).
+
+To run the tool write one of the following command in the terminal depending if you want to keep or discard unamtched boxes, and replace the dataset paths and the iou threshold with the desidered ones:
+- **keep** the unmatched boxes: ```merge_annotations -a1=annotator_1_dataset_path -a2=annotator_1_dataset_path -o=output_dataset_path -iou=  --keep```
+- **discard** the unmatched boxes: ```merge_annotations -a1=annotator_1_dataset_path -a2=annotator_1_dataset_path -o=output_dataset_path -iou=  --drop```
+
+**Remark**: this tool does not support fibroblasts annotations
+
+### Correct Merged Annotations
+
+After the annotations have been merged, it is posible to undergo a second round to further manually correct the annotations. This tool allows to navigate the dataset generated with ```merge_annotations``` and permorm the necessary manual corrections adn consists in a GUI based on Napari. Similar to above, the boxes are colored to increase the clarity: the matched boxes are represented in <code style="color : green">**green**</code>, the unmatched boxed are represented in <code style="color : red">**red**</code> , and the new manually added boxes in <code style="color : magenta">**magenta**</code>.
+
+To run this tool write the following command in the terminal:
+
+```shell
+annotate_organoids -d=dataset_path
+```
+
+To review the previously annotaed images just add the ```-r``` flag as above.
+
+**Remark**: this tool does not support fibroblasts annotations
 
 ## Contributing
 

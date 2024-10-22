@@ -7,10 +7,11 @@ import skimage
 import cv2
 import numpy as np
 import pandas as pd
-import torch
+from matplotlib.colors import rgb2hex
 
-from .utils import *
-from .const import *
+
+from .utils.utils import *
+from .utils.const import *
 
 
 
@@ -25,17 +26,8 @@ def main():
 
 
     # extract the paths of the images and the ored8icitons in the dataset
-    ext = ['tif', 'png', 'jpg']
-    images_paths = []
-    predictions_paths = []
-    for root, _, files in os.walk(top=images):
-        for file in files:
-            if file.split('.')[-1] in ext and file[0]!='.':
-                file_path = os.path.join(root, file)
-                images_paths.append(file_path)
+    images_paths = get_images_paths(args.dataset) 
 
-
-      
     # create the annotations folder and the log file 
     annotations = os.path.join(args.dataset, ANNOTATIONS_SUBFOLDER)
     os.makedirs(annotations, exist_ok=True)
@@ -44,7 +36,10 @@ def main():
     # start annotating the images
     for i, image_path in enumerate(images_paths):
     # for image_path, prediction_path in zip(images_paths, predictions_paths):
-        if check_element_in_file(annotated_images, os.path.relpath(image_path, images)):
+        image_rel_path = os.path.relpath(image_path, images)
+        if check_element_in_file(annotated_images, image_rel_path) and args.annotate:
+            continue
+        elif not check_element_in_file(annotated_images, image_rel_path) and not args.annotate:
             continue
 
         start = time.time()
@@ -58,9 +53,18 @@ def main():
         # image = skimage.io.imread(image_path, as_gray=True)
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         image_layer = viewer.add_image(image)
+        if args.annotate:
+            napari_points = []
+        else:
+            points_path = os.path.join(annotations, image_to_annotations_path(image_rel_path, POINTS_SUFF))
+            points = pd.read_csv(points_path, sep=',', index_col=0)
+            napari_points = []
+            for _, point in points.iterrows():
+                napari_points.append(np.array(point))
+
 
         points_layer = viewer.add_points(
-            data=[],
+            data=napari_points,
             face_color='lime',
             name="fibroblast",
             size=20
@@ -75,7 +79,7 @@ def main():
             napari_points = viewer.layers["fibroblast"].data
             
             relative_path = os.path.relpath(image_path, images)
-            points_path = os.path.join(annotations, os.path.splitext(relative_path)[0] + POINTS_SUFF + ".csv")
+            points_path = os.path.join(annotations, image_to_annotations_path(relative_path, POINTS_SUFF))
             os.makedirs(os.path.dirname(points_path), exist_ok=True)
             # write the points
             points = pd.DataFrame(data=napari_points, columns=["x", "y"]).astype(np.int16)
