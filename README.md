@@ -71,7 +71,10 @@ Given a dataset of microscopy images, these tools allow to annotate them with th
     ```shell
     annotate_fibroblasts -d=dataset_path
     ```
-    During the execution type "**s**" to save the annotation and go to the next image, and type "**e**" to end the program.
+    During the execution type:
+    - "**h** to hide or view the current annotations
+    - "**s**" to save the annotation and go to the next image:
+    - "**e**" to end the program.
 
 2. **Review**:
 
@@ -106,7 +109,7 @@ To run this tool write the following command in the terminal:
 annotate_organoids -d=dataset_path
 ```
 
-To review the previously annotaed images just add the ```-r``` flag as above.
+As described above for the annotation tool the same keyborad shorcuts are anvailable, and to review the previously annotaed images just add the ```-r``` flag to the terminal command.
 
 **Remark**: this tool does not support fibroblasts annotations
 

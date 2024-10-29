@@ -20,20 +20,6 @@ def maskRCNNModel():
         param.requires_grad = True
     return model
 
-def maskRCNNModelInf():
-    backbone = resnet_fpn_backbone(backbone_name='resnet34', weights='IMAGENET1K_V1', trainable_layers=4)
-    model = MaskRCNN(backbone,
-                      num_classes=2,
-                      box_detections_per_img=1000,
-                      box_nms_thresh=0.4,
-                      box_score_thresh=0.0,
-                     )
-    model.roi_heads.batch_size_per_image = 256
-    model.rpn.batch_size_per_image = 128
-    for param in model.parameters():
-        param.requires_grad = True
-    return model
-
 
 def thresholded_prediction(model, img, threshold):
     """

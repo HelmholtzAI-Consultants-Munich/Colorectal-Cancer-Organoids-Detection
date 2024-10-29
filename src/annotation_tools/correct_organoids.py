@@ -10,12 +10,11 @@ import torch
 import time
 from matplotlib.colors import rgb2hex
 
-from .utils.utils import *
-from .utils.const import *
-from .goat.engine import FitterMaskRCNN
-from .goat.model import maskRCNNModel, predict_image
-from .goat.dataset import InferenceMaskRCNNDataset
-
+from src.utils.utils import *
+from src.utils.const import *
+from src.goat.engine import FitterMaskRCNN
+from src.goat.model import maskRCNNModel, predict_image
+from src.goat.dataset import InferenceMaskRCNNDataset
 
 def main():
     # parse the arguments
@@ -26,16 +25,10 @@ def main():
     images = os.path.join(args.dataset, IMAGES_SUBFOLDER)
     annotations = os.path.join(args.dataset, ANNOTATIONS_SUBFOLDER)
     assert os.path.exists(images), "The dataset path does not contain an images subfolder."
-    # predictions = os.path.join(args.dataset, PREDICTIONS_SUBFOLDER)
-    # assert os.path.exists(predictions), "The dataset path does not contain a predictions subfolder."
-    model_weights_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "model/best-checkpoint-114epoch.bin")
-    print(model_weights_path)
 
 
     # extract the paths of the images and the predictions in the dataset
     images_paths = get_images_paths(args.dataset)
-
-    # lad the corrected images
     corrected_images = os.path.join(annotations ,CORRECTED_IMAGES_FILE_ORG)
 
     # start annotating the images
@@ -74,7 +67,11 @@ def main():
         )
         shapes_layer.current_edge_color = "magenta"
         
-
+        # hide the boxes
+        @viewer.bind_key('h')# hide the boxes
+        def hide_boxes(viewer: napari.Viewer):
+            shapes_layer.visible = not shapes_layer.visible
+            
         # save results
         @viewer.bind_key('s')# when finished
         def save_results(viewer: napari.Viewer):

@@ -10,8 +10,8 @@ import pandas as pd
 from matplotlib.colors import rgb2hex
 
 
-from .utils.utils import *
-from .utils.const import *
+from src.utils.utils import *
+from src.utils.const import *
 
 
 
