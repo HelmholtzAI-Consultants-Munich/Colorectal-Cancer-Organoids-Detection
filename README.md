@@ -106,7 +106,7 @@ After the annotations have been merged, it is posible to undergo a second round 
 To run this tool write the following command in the terminal:
 
 ```shell
-annotate_organoids -d=dataset_path
+correct_organoids -d=dataset_path
 ```
 
 As described above for the annotation tool the same keyborad shorcuts are anvailable, and to review the previously annotaed images just add the ```-r``` flag to the terminal command.
