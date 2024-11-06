@@ -1,10 +1,16 @@
+import os
+
 import numpy as np
+import pandas as pd
 from torch.utils.data import Dataset, DataLoader
 import albumentations as A
 import cv2
 import torch
 # from config import Config
 from .utils import rle_decode
+
+from src.utils.const import *
+from src.utils.utils import *
 
 
 # config = Config()
@@ -176,3 +182,24 @@ class MaskRCNNDataset(Dataset):
             if type(rle) != float:
                 binary[i] = rle_decode(rle, shape)
         return binary
+    
+
+class MyDataset:
+
+    def __init__(self, dataset_path: str):
+        check_dataset(dataset_path)
+        self.images_paths = get_images_paths(dataset_path)
+        self.labels_paths = get_annotations_paths(self.images_paths, dataset_path)
+
+    def __len__(self):
+        return len(self.images_paths)
+    
+    def __getitem__(self, index):
+        image_path = self.images_paths[index]
+        label_path = self.labels_paths[index]
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        label = pd.read_csv(label_path, sep=',', index_col=0)
+        return image, label
+    
+
+

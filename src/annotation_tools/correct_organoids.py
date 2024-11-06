@@ -10,6 +10,7 @@ import torch
 import time
 from matplotlib.colors import rgb2hex
 
+from src.utils.annotation_utils import *
 from src.utils.utils import *
 from src.utils.const import *
 from src.goat.engine import FitterMaskRCNN

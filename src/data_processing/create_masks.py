@@ -4,55 +4,16 @@ import shutil
 from tqdm import tqdm
 
 import numpy as np
+import pandas as pd
 import torch
 from torchvision.models.detection.roi_heads import maskrcnn_inference
 
 from src.utils.const import *
 from src.utils.utils import *
+from src.utils.data_utils import *
 from src.goat.model import maskRCNNModel
 from src.goat.dataset import InferenceMaskRCNNDataset
 
-def run_length_encode(mask: np.ndarray) -> List[int]:
-    """Convert a mask to RLE.
-    
-    Args:
-        mask (np.ndarray): binary mask
-        
-    Returns:
-        List[int]: RLE encoded mask
-    """
-    # make the mask binary
-    mask = (mask > 0.5).astype(np.uint8).flatten()
-    # find the positions where the mask changes value
-    changes = np.diff(mask, prepend=mask[0])
-    # find the run lengths
-    run_lengths = np.where(changes != 0)[0]
-    # calculate the lengths of the runs
-    run_lengths = np.diff(np.concatenate(([0], run_lengths, [len(mask)])))
-    return run_lengths.tolist()
-
-
-def run_length_decode(rle: List[int], shape: Tuple[int, int]) -> np.ndarray:
-    """Convert RLE to a mask.
-    
-    Args:
-        rle (str): RLE encoded mask
-        shape (Tuple[int, int]): shape of the mask
-        
-    Returns:
-        np.ndarray: binary mask
-    """
-    # convert the RLE to a list of integers
-    rle = list(map(int, rle.split()))
-    mask = []
-    curr = 0
-    #iterate over rle two by two
-    for i in rle:
-        mask.extend([curr]*i)
-        curr = 1 - curr
-    mask = np.array(mask)
-    mask = mask.reshape(shape)
-    return mask
 
 def reshape_annotations(annotations: pd.DataFrame, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
     # size of the image are in the format (height, width)
