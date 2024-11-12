@@ -65,7 +65,7 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-class FitterMaskRCNN_Old:
+class FitterMaskRCNN:
     def __init__(self, model, device, config):
         """
         Engine for Fitting MaskRCNN model. For configs see config.
