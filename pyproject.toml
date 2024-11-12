@@ -29,7 +29,7 @@ classifiers = [
 dependencies = [
     "napari",
     "PyQt5",
-    "numpy",
+    "numpy<2",
     "pandas",
     "opencv-python",
     "torch",
