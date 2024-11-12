@@ -4,3 +4,4 @@ venv/
 *.egg-info/
 dataset
 best-checkpoint-114epoch.bin
+.DS_Store
