@@ -11,6 +11,7 @@ from .utils import rle_decode
 
 from src.utils.const import *
 from src.utils.utils import *
+from src.utils.data_utils import *
 
 
 # config = Config()
@@ -36,7 +37,7 @@ def get_train_transforms():
             A.VerticalFlip(p=0.5),
             A.RandomRotate90(p=0.5),
             A.Blur(blur_limit=15, p=0.5),
-            A.Resize(width=config.resize, height=config.resize, p=1),
+            # A.Resize(width=config.resize, height=config.resize, p=1),
 
         ],
         p=1.0,
@@ -48,12 +49,67 @@ def get_valid_transforms():
     return A.Compose(
         [
             A.ToGray(p=1),
-            A.Resize(height=config.resize, width=config.resize, p=1.0),
+            # A.Resize(height=config.resize, width=config.resize, p=1.0),
         ],
         p=1.0,
         bbox_params={'format': 'pascal_voc', 'min_area': 2, 'min_visibility': 0, 'label_fields': ['category_id']}
     )
 
+class MaskRCNNDataset(Dataset):
+
+    def __init__(self, dataset_path: str, datatype: str = "train"):
+
+        assert datatype in ["train", "eval"]
+        check_dataset(dataset_path)
+        self.images_paths = get_images_paths(dataset_path)
+        self.labels_paths = get_annotations_paths(self.images_paths, dataset_path)
+
+        if datatype == "train":
+            self.transforms = get_train_transforms()
+        else:
+            self.transforms = get_valid_transforms()
+
+
+    def __len__(self):
+        return len(self.images_paths)
+    
+    def __getitem__(self, index):
+        image_path = self.images_paths[index]
+        label_path = self.labels_paths[index]
+        image = self.load_image(image_path)
+        # extract the vounding boxes and the masks tenors
+        targets_df = pd.read_csv(label_path, sep=',', index_col=0)
+        boxes = self.load_boxes(targets_df[['x1', 'y1', 'x2', 'y2']].values)
+        masks = self.load_masks(targets_df['mask'].values, image.shape[0:2])
+        labels = torch.ones((boxes.shape[0]), dtype=torch.uint64)
+        iscrowd = torch.zeros((boxes.shape[0]), dtype=torch.int64)
+        image_id = torch.tensor([index])
+        area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+        
+        targets = {"boxes": boxes, "labels": labels, "masks": masks, "image_id": image_id, "area": area, "iscrowd": iscrowd}
+        return image, targets
+    
+    def load_image(self, img_path):
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        # relevant only for 
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
+        image /= 255.0
+        return image
+    
+    def load_boxes(self, boxes: pd.DataFrame) -> torch.Tensor:
+        boxes = boxes.to_numpy()
+        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+        return boxes
+
+    def load_masks(self, rle_masks, image_size) -> torch.Tensor:
+        masks = []
+        for rle in rle_masks:
+            masks.append(run_length_decode(rle, image_size))
+        masks = torch.stack(masks, dim=0)
+        return masks
+
+
+#### code form GOAT repo ####
 
 class InferenceMaskRCNNDataset(Dataset):
     def __init__(self, img_paths):
@@ -81,7 +137,7 @@ class InferenceMaskRCNNDataset(Dataset):
         return image
 
 
-class MaskRCNNDataset(Dataset):
+class MaskRCNNDataset_old(Dataset):
     def __init__(self, df, img_paths, gt_boxes, gt_rle_strings, datatype="train"):
         super().__init__()
         assert datatype in ["train", "val", "test", "inference", None]
@@ -184,22 +240,7 @@ class MaskRCNNDataset(Dataset):
         return binary
     
 
-class MyDataset:
 
-    def __init__(self, dataset_path: str):
-        check_dataset(dataset_path)
-        self.images_paths = get_images_paths(dataset_path)
-        self.labels_paths = get_annotations_paths(self.images_paths, dataset_path)
-
-    def __len__(self):
-        return len(self.images_paths)
-    
-    def __getitem__(self, index):
-        image_path = self.images_paths[index]
-        label_path = self.labels_paths[index]
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        label = pd.read_csv(label_path, sep=',', index_col=0)
-        return image, label
     
 
 

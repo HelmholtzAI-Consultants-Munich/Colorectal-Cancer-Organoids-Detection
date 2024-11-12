@@ -8,6 +8,45 @@ import os
 from datetime import datetime
 import time
 
+def EngineMaskRCNN():
+
+    def __init__():
+        pass
+
+    def fit(self, model_path, train_loader, validation_loader, device):
+        # initialize model and load weights
+        # initialize optimizer and scheduler
+        # iterate through epochs
+        #   train_one_epoch
+        #   validate
+        #   evaluate patience
+
+        pass
+
+    def train_one_epoch(self, model, train_loader):
+        # iterate through batches:
+        #   forward pass
+        #   backward pass
+        #   optimizer step
+        #   zero grad
+
+        pass
+
+    def validate(self, model, val_loader):
+        # iterate through batches:
+        #   forward pass
+        #   calculate loss
+        #   calculate metrics
+
+        pass
+
+    def save(self, path):
+        # save the model
+        pass
+
+
+### original code form GOAT repo ###
+
 
 class AverageMeter(object):
     def __init__(self):
@@ -26,7 +65,7 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-class FitterMaskRCNN:
+class FitterMaskRCNN_Old:
     def __init__(self, model, device, config):
         """
         Engine for Fitting MaskRCNN model. For configs see config.
