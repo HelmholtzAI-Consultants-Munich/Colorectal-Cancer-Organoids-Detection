@@ -16,10 +16,11 @@ The program requires in input only the path to the dataset folder containig the 
                 
 ```
 
-In addition, the program wil keep track of the images that have been annotated, this way every time the program is stopped and started again it will restart where the user left off during the last session.
-Finally, it is also  possible to review the annotations made and to apply further corrections.
+The annotation tool has two usage modes:
+- in **annotation** mode the program will keep track of the images that have been annotated, and every time the program is stopped and started again it will restart where the user left off during the last session.
+- in **review** mode the tool allows to review the images already annotated and to apply further corrections if necessary.
 
-An analogous framowork has been developed to annotate fibroblasts on the images. However, in this case the annotation consists in poits centered inthe nuclei of the fibroblast and there is no model that prides a baselin for the annotations.
+In addition, this  framework has been developed to annotate fibroblasts on the images. However, in this case the annotation consists in poits centered inthe nuclei of the fibroblast and there is no model that prides a baselin for the annotations.
 
 ## Installation
 
@@ -59,7 +60,7 @@ Next, we describe in details what these tools do and how to use them, for more d
 
 ### Image Annotation
 
-Given a dataset of microscopy images, these tools allow to annotate them with the aid of a GUI based on Napari. The user can generate bounding box annotations of the organoids and point annotations for the fibroblasts. When annotation organoids each image will be presented to the user with the predictions made by GOAT, which can be used as a baseline for the annotation. For clarity the baseline boxes are colored in <code style="color : blue">**blue**</code>, while the bpoxes manually added by the user are represented in <code style="color : magenta">**magenta**</code>.
+Given a dataset of microscopy images, these tools allow to annotate them with the aid of a GUI based on Napari. The user can generate bounding box annotations of the organoids and point annotations for the fibroblasts. When annotation organoids each image will be presented to the user with the predictions made by GOAT, which can be used as a baseline for the annotation. For clarity the baseline boxes are colored in $\color{blue}{\textbf{blue}}$ , while the bpoxes manually added by the user are represented in $\color{magenta}{\textbf{magenta}}$ .
 
 1. **Annotate:** 
 
@@ -101,7 +102,7 @@ To run the tool write one of the following command in the terminal depending if 
 
 ### Correct Merged Annotations
 
-After the annotations have been merged, it is posible to undergo a second round to further manually correct the annotations. This tool allows to navigate the dataset generated with ```merge_annotations``` and permorm the necessary manual corrections adn consists in a GUI based on Napari. Similar to above, the boxes are colored to increase the clarity: the matched boxes are represented in <code style="color : green">**green**</code>, the unmatched boxed are represented in <code style="color : red">**red**</code> , and the new manually added boxes in <code style="color : magenta">**magenta**</code>.
+After the annotations have been merged, it is posible to undergo a second round to further manually correct the annotations. This tool allows to navigate the dataset generated with ```merge_annotations``` and permorm the necessary manual corrections adn consists in a GUI based on Napari. Similar to above, the boxes are colored to increase the clarity: the matched boxes are represented in $\color{green}{\textbf{green}}$ , the unmatched boxed are represented in $\color{red}{\textbf{red}}$  , and the new manually added boxes in $\color{magenta}{\textbf{magenta}}$ .
 
 To run this tool write the following command in the terminal:
 
