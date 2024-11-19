@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 import time
 
-def EngineMaskRCNN():
+def FitterMaskRCNN():
 
     def __init__():
         pass
@@ -65,7 +65,7 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-class FitterMaskRCNN:
+class FitterMaskRCNN_old:
     def __init__(self, model, device, config):
         """
         Engine for Fitting MaskRCNN model. For configs see config.

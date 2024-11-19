@@ -59,15 +59,16 @@ class MaskRCNNDataset(Dataset):
 
     def __init__(self, dataset_path: str, datatype: str = "train"):
 
-        assert datatype in ["train", "eval"]
         check_dataset(dataset_path)
         self.images_paths = get_images_paths(dataset_path)
         self.labels_paths = get_annotations_paths(self.images_paths, dataset_path)
 
         if datatype == "train":
             self.transforms = get_train_transforms()
-        else:
+        elif datatype == "eval":
             self.transforms = get_valid_transforms()
+        else:
+            raise ValueError(f"Unknown datatype {datatype}")
 
 
     def __len__(self):
@@ -79,8 +80,8 @@ class MaskRCNNDataset(Dataset):
         image = self.load_image(image_path)
         # extract the vounding boxes and the masks tenors
         targets_df = pd.read_csv(label_path, sep=',', index_col=0)
-        boxes = self.load_boxes(targets_df[['x1', 'y1', 'x2', 'y2']].values)
-        masks = self.load_masks(targets_df['mask'].values, image.shape[0:2])
+        boxes = self.load_boxes(targets_df)
+        masks = self.load_masks(targets_df, image.shape[0:2])
         labels = torch.ones((boxes.shape[0]), dtype=torch.uint64)
         iscrowd = torch.zeros((boxes.shape[0]), dtype=torch.int64)
         image_id = torch.tensor([index])
@@ -90,26 +91,25 @@ class MaskRCNNDataset(Dataset):
         return image, targets
     
     def load_image(self, img_path):
-        image = cv2.imread(img_path, cv2.IMREAD_COLOR)
-        # relevant only for 
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR).astype(np.float64)
+        image = torch.from_numpy(image)
+        image = image.permute(2, 0, 1)
         image /= 255.0
         return image
     
-    def load_boxes(self, boxes: pd.DataFrame) -> torch.Tensor:
-        boxes = boxes.to_numpy()
-        boxes = torch.as_tensor(boxes, dtype=torch.float32)
+    def load_boxes(self, targets_df: pd.DataFrame) -> torch.Tensor:
+        boxes = targets_df[['x1', 'y1', 'x2', 'y2']].values
+        boxes = torch.as_tensor(boxes, dtype=torch.float64)
         return boxes
 
-    def load_masks(self, rle_masks, image_size) -> torch.Tensor:
+    def load_masks(self, targets_df: pd.DataFrame, image_size: Tuple[int]) -> torch.Tensor:
+        rle_masks = targets_df['mask'].values
         masks = []
         for rle in rle_masks:
             masks.append(run_length_decode(rle, image_size))
         masks = torch.stack(masks, dim=0)
         return masks
-
-
-#### code form GOAT repo ####
+    
 
 class InferenceMaskRCNNDataset(Dataset):
     def __init__(self, img_paths):
@@ -126,15 +126,18 @@ class InferenceMaskRCNNDataset(Dataset):
     def __getitem__(self, index):
         image_path = self.img_paths[index]
         img = self.load_image(image_path)
-        meta = {"height": img.shape[0], "width": img.shape[1], "path": image_path}
-        img = torch.from_numpy(img).permute(2, 0, 1).float()
+        meta = {"height": img.shape[1], "width": img.shape[2], "path": image_path}
         return img, meta
 
     def load_image(self, img_path):  # load greyscale at inference because webapp does it to save MBs
-        image = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE).astype(np.float32)
-        image = np.transpose(np.stack([image, image, image], axis=0), (1, 2, 0))
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR).astype(np.float32)
+        image = torch.from_numpy(image)
+        image = image.permute(2, 0, 1)
         image /= 255.0
         return image
+
+
+#### code form GOAT repo ####
 
 
 class MaskRCNNDataset_old(Dataset):

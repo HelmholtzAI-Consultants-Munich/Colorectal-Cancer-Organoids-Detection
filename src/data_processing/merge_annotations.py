@@ -138,10 +138,10 @@ def main():
         prog="Colorectal Cancer Organoids Annotator",
         description="This tool allows to merge the annotations of two separate datasets cureated by two different annotators.",
     )
-    parser.add_argument('-a1', '--annotator1', help='Path to the folder containing the first annotated dataset.')
-    parser.add_argument('-a2', '--annotator2', help='Path to the folder containing the second annotated dataset.')
-    parser.add_argument('-o', '--output', help='Path to the output folder.')
-    parser.add_argument('-iou', '--iou', help='The intersection over union threshold.', default=0.5, type=float)
+    parser.add_argument('-d1', '--dataset1', help='Path to the folder containing the first annotated dataset.', required=True)
+    parser.add_argument('-d2', '--dataset2', help='Path to the folder containing the second annotated dataset.', required=True)
+    parser.add_argument('-o', '--output', help='Path to the output folder.', required=True)
+    parser.add_argument('-iou', '--iou', help='The intersection over union threshold. (defaulkt = 0.5)', default=0.5, type=float)
     parser.add_argument('--keep', action='store_true')
     parser.add_argument('--drop', dest='keep', action='store_false')
     parser.set_defaults(keep=True)
@@ -150,16 +150,16 @@ def main():
     args = parser.parse_args()
 
     # load the annotations
-    annotations_files_1 = annotations_files(args.annotator1)
-    annotations_files_2 = annotations_files(args.annotator2)
+    annotations_files_1 = annotations_files(args.dataset1)
+    annotations_files_2 = annotations_files(args.dataset2)
 
     if os.path.exists(args.output):
         shutil.rmtree(args.output)
-    shutil.copytree(os.path.join(args.annotator1, IMAGES_SUBFOLDER), os.path.join(args.output, IMAGES_SUBFOLDER))
+    shutil.copytree(os.path.join(args.dataset1, IMAGES_SUBFOLDER), os.path.join(args.output, IMAGES_SUBFOLDER))
 
     for file_1, file_2 in tqdm(zip(annotations_files_1, annotations_files_2)):
-        relative_path_1 = os.path.relpath(file_1, os.path.join(args.annotator1, ANNOTATIONS_SUBFOLDER))
-        relative_path_2 = os.path.relpath(file_2, os.path.join(args.annotator2, ANNOTATIONS_SUBFOLDER))
+        relative_path_1 = os.path.relpath(file_1, os.path.join(args.dataset1, ANNOTATIONS_SUBFOLDER))
+        relative_path_2 = os.path.relpath(file_2, os.path.join(args.dataset2, ANNOTATIONS_SUBFOLDER))
         assert relative_path_1 == relative_path_2, f"The files {relative_path_1} and {relative_path_2} do not match."
 
         # read the annotations

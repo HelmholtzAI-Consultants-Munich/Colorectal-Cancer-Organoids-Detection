@@ -13,7 +13,7 @@ def get_args():
         prog="Colorecrtal Cancer Organoids Annotator",
         description="This tool allows to iterate throught a image dataset and correct the already exiting annotatoins.",
     )
-    parser.add_argument('-d', '--dataset', help='Path to the folder containing the dataset.')
+    parser.add_argument('-d', '--dataset', help='Path to the folder containing the dataset.', required=True)
     parser.add_argument('-a', '--annotate', action='store_true', help='Annotate the dataset mode (Set by default).')
     parser.add_argument('-r', '--review', dest="annotate", action='store_false', help='Review the dataset mode.')
     parser.set_defaults(annotate=True)
@@ -125,11 +125,16 @@ def bbox_xyxy_to_box(bboxes: pd.DataFrame) -> List[Box]:
     return bboxes_box
 
 def bbox_napari_to_xyxy(napari_bboxes: list):
-    """Convert a bonfing box in napari format to a xyxy format (napari format has x and y swapped)
+    """Convert a bounding box in napari format to a xyxy format (napari format has x and y swapped)
     """
     bboxes = pd.DataFrame(columns=["x1", "y1", "x2", "y2"], index=list(range(len(napari_bboxes))), dtype=np.int64)
     for i, bbox in enumerate(napari_bboxes):
-        bboxes.loc[i] = [bbox[0,1], bbox[0,0], bbox[2,1], bbox[2,0]]
+        bboxes.loc[i] = [
+            min(bbox[0,1], bbox[2,1]),
+            min(bbox[0,0], bbox[2,0]), 
+            max(bbox[0,1], bbox[2,1]),
+            max(bbox[0,0], bbox[2,0]), 
+        ]
     return bboxes.astype(np.int16)
 
 

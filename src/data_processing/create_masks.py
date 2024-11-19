@@ -11,13 +11,13 @@ from torchvision.models.detection.roi_heads import maskrcnn_inference
 from src.utils.const import *
 from src.utils.utils import *
 from src.utils.data_utils import *
-from src.goat.model import maskRCNNModel
-from src.goat.dataset import InferenceMaskRCNNDataset
+from src.model.model import maskRCNNModel
+from src.model.dataset import InferenceMaskRCNNDataset
 
 
-def reshape_annotations(annotations: pd.DataFrame, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
+def reshape_bboxes(bboxes: pd.DataFrame, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
     # size of the image are in the format (height, width)
-    tensor = torch.tensor(annotations.values, dtype=torch.float32)
+    tensor = torch.tensor(bboxes.values, dtype=torch.float32)
     if tensor.shape[1] == 1:
         tensor = tensor.T
     x_reshape = new_size[1] / original_size[1]
@@ -28,10 +28,10 @@ def reshape_annotations(annotations: pd.DataFrame, original_size: Tuple[int], ne
     tensor[:, 3] *= y_reshape
     return tensor
 
-def predict_masks(image: torch.tensor, annotations: pd.DataFrame, model: torch.nn.Module, image_size: Tuple[int], device) -> np.ndarray:
+def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Module, image_size: Tuple[int], device) -> np.ndarray:
     
-    if len(annotations) == 0:
-        print(f"no annotations for {annotations}")
+    if len(bboxes) == 0:
+        print(f"no annotations for {bboxes}")
         return torch.empty(0)
     # normalize the image
     image_norm = image.unsqueeze(0).to(device)
@@ -39,7 +39,7 @@ def predict_masks(image: torch.tensor, annotations: pd.DataFrame, model: torch.n
     # run the backbone
     features = model.backbone(image_norm.tensors)
     # adapt the boxes size to the new image shape
-    bboxes = reshape_annotations(annotations, image_size, (image_norm.image_sizes[0][0], image_norm.image_sizes[0][1]))
+    bboxes = reshape_bboxes(bboxes, image_size, (image_norm.image_sizes[0][0], image_norm.image_sizes[0][1]))
     # run the mask head
     mask_features = model.roi_heads.mask_roi_pool(features, [bboxes], image_norm.image_sizes)
     mask_features = model.roi_heads.mask_head(mask_features)
@@ -54,9 +54,9 @@ def predict_masks(image: torch.tensor, annotations: pd.DataFrame, model: torch.n
         "scores": torch.ones(len(bboxes)),
         "labels": labels,
     }]
-    
+    print(image_size)
     detections = model.transform.postprocess(detections, image_norm.image_sizes, [image_size[::-1]])
-    return detections[0]["masks"].squeeze(1).detach().cpu().numpy()
+    return detections[0]["masks"].squeeze(1).detach().cpu()
     
 def main():
 
@@ -65,8 +65,8 @@ def main():
         prog="Colorectal Cancer Organoids Annotator",
         description="This tool allows to predict the detection masks from the bounding boxes.",
     )
-    parser.add_argument('-d', '--dataset', help='Path to the folder containing the annotated dataset.')
-    parser.add_argument('-o', '--output', help='Path to the output folder.')
+    parser.add_argument('-d', '--dataset', help='Path to the folder containing the annotated dataset.', required=True)
+    parser.add_argument('-o', '--output', help='Path to the output folder.', required=True)
     args = parser.parse_args()
 
     images_dir = os.path.join(args.dataset, IMAGES_SUBFOLDER)
@@ -94,7 +94,8 @@ def main():
         annotations_rel_path = image_to_annotations_path(os.path.relpath(meta["path"], images_dir), BBOXES_SUFF)
         annotations_path = os.path.join(annotations_dir, annotations_rel_path)
         annotations = pd.read_csv(annotations_path, sep=',', index_col=0)
-        masks = predict_masks(image, annotations, model, (meta["height"], meta["width"]), device)
+        bboxes = annotations[['x1', 'y1', 'x2', 'y2']]
+        masks = predict_masks(image, bboxes, model, (meta["height"], meta["width"]), device)
         mask_rles = [run_length_encode(mask) for mask in masks]
         annotations["mask"] = mask_rles
         annotation_output_path = os.path.join(args.output, ANNOTATIONS_SUBFOLDER, annotations_rel_path)

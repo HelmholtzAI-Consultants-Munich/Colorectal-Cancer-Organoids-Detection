@@ -60,7 +60,13 @@ def check_dataset(dataset_path):
     images_paths = get_images_paths(dataset_path)
     annotations_paths = get_annotations_paths(images_paths, dataset_path)
     assert len(images_paths) == len(annotations_paths), f"The number of images and annotations files is different."
-
+    # Check for piarwise correspondence between images and annotations
+    images_rel_paths = [os.path.relpath(image_path, os.path.join(dataset_path, IMAGES_SUBFOLDER)) for image_path in images_paths]
+    annotations_rel_paths = [os.path.relpath(annotations_path, os.path.join(dataset_path, ANNOTATIONS_SUBFOLDER)) for annotations_path in annotations_paths]
+    for image_rel_path in images_rel_paths:
+        annotations_rel_path = image_to_annotations_path(image_rel_path)
+        assert annotations_rel_path in annotations_rel_paths, f"The annotations file {annotations_rel_path} does not exist."
+    # Since annotations and images have the same number of elements, we don't have to check the correspondence in the other direction
     return True
 
 def image_to_annotations_path(image_path: str, suffix: str = BBOXES_SUFF):

@@ -20,7 +20,6 @@ def run_length_encode(mask: torch.tensor) -> List[int]:
     run_lengths = torch.where(changes != 0)[0]
     # calculate the lengths of the runs
     run_lengths = torch.diff(torch.concatenate((torch.tensor([0]), run_lengths, torch.tensor([len(mask)]))))
-    print(run_lengths)
     return " ".join([str(i.item()) for i in run_lengths])
 
 

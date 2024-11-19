@@ -9,13 +9,14 @@ import pandas as pd
 import torch
 import time
 from matplotlib.colors import rgb2hex
+import gdown
 
 from src.utils.annotation_utils import *
 from src.utils.utils import *
 from src.utils.const import *
-from src.goat.engine import FitterMaskRCNN
-from src.goat.model import maskRCNNModel, predict_image
-from src.goat.dataset import InferenceMaskRCNNDataset
+from src.model.engine import FitterMaskRCNN
+from src.model.model import maskRCNNModel, predict_image
+from src.model.dataset import InferenceMaskRCNNDataset
 
 
 def main():
@@ -27,7 +28,11 @@ def main():
     images = os.path.join(args.dataset, IMAGES_SUBFOLDER)
     assert os.path.exists(images), "The dataset path does not contain an images subfolder."
     model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
-    print(model_weights_path)
+    if not os.path.exists(model_weights_path):
+        gdown.download(
+            id="1AcrYCBR5-kg91C61boj221t1X_SVX8Hv",  
+            output=model_weights_path,
+        )
 
 
     # extract the paths of the images and the ored8icitons in the dataset

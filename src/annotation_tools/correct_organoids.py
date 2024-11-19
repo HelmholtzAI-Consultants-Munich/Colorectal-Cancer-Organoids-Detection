@@ -13,9 +13,9 @@ from matplotlib.colors import rgb2hex
 from src.utils.annotation_utils import *
 from src.utils.utils import *
 from src.utils.const import *
-from src.goat.engine import FitterMaskRCNN
-from src.goat.model import maskRCNNModel, predict_image
-from src.goat.dataset import InferenceMaskRCNNDataset
+from src.model.engine import FitterMaskRCNN
+from src.model.model import maskRCNNModel, predict_image
+from src.model.dataset import InferenceMaskRCNNDataset
 
 def main():
     # parse the arguments

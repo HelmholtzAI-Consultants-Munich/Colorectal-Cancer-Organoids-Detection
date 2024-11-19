@@ -66,11 +66,11 @@ Given a dataset of microscopy images, these tools allow to annotate them with th
 
     To run the annotation pipeline write the following command in the terminal and replace `dataset_path` with the actual path on you machine. For annotating organoids run:
     ```shell
-    annotate_organoids -d=dataset_path
+    annotate_organoids -d dataset_path -a
     ```
     while for annotating fibrobalsts run:
     ```shell
-    annotate_fibroblasts -d=dataset_path
+    annotate_fibroblasts -d dataset_path -a
     ```
     During the execution type:
     - "**h** to hide or view the current annotations
@@ -81,11 +81,11 @@ Given a dataset of microscopy images, these tools allow to annotate them with th
 
     To review the images previously annotated the commands are similar to above, for organoids annotations run:
     ```shell
-    annotate_organoids -d=dataset_path -r
+    annotate_organoids -d dataset_path -r
     ```
     and for fibroblasts annotations run:
     ```shell
-    annotate_fibroblasts -d=dataset_path -r
+    annotate_fibroblasts -d dataset_path -r
     ```
 
     As before, during the execution type "**s**" to save the annotation and go to the next image, and type "**e**" to end the program.
@@ -95,8 +95,8 @@ Given a dataset of microscopy images, these tools allow to annotate them with th
 If two different annotators independently annotated the same dataset it is possible to merge the two annotations. The tool uses the Hungarian algorithm to match boxes form the two annotators that have maximal intersection over Union (IoU) score nad merges the "matching" boxes by averaging the edges. In addition, it is possible to set a minimum threshold for the IoU score below which two boxes are not matched by the algorithm (```-iou``` parameter). Finally, the user can decide whether to include or to discard the unmatched bounding boxes in the final annotation (```--keep``` or ```--drop``` flags).
 
 To run the tool write one of the following command in the terminal depending if you want to keep or discard unmatched boxes, and replace the dataset paths and the iou threshold with the desired ones:
-- **keep** the unmatched boxes: ```merge_annotations -a1=annotator_1_dataset_path -a2=annotator_1_dataset_path -o=output_dataset_path -iou=  --keep```
-- **discard** the unmatched boxes: ```merge_annotations -a1=annotator_1_dataset_path -a2=annotator_1_dataset_path -o=output_dataset_path -iou=  --drop```
+- **keep** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path -iou=  --keep```
+- **discard** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path -iou=  --drop```
 
 **Remark**: this tool does not support fibroblasts annotations
 
@@ -107,7 +107,7 @@ After the annotations have been merged, it is posible to undergo a second round 
 To run this tool write the following command in the terminal:
 
 ```shell
-correct_organoids -d=dataset_path
+correct_organoids -d dataset_path
 ```
 
 As described above for the annotation tool the same keyboard shortcuts are unavailable, and to review the previously annotated images just add the ```-r``` flag to the terminal command.
