@@ -5,3 +5,6 @@ venv/
 dataset
 best-checkpoint-114epoch.bin
 .DS_Store
+.neptune
+model
+notebooks

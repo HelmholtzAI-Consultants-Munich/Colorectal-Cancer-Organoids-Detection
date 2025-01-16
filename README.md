@@ -1,5 +1,10 @@
 # Colorectal Cancer Organoids Detection
 
+
+<p align="center">
+  <img src="docs/annotation_tool.png" width="600" >
+</p>
+
 This repository is a Napari based tool that allows to annotate organoids in brightfield microscopy images with bounding boxes. To make the annotation process fastest we implemented an AI-assisted labelling system which uses the predictions of [GOAT](https://github.com/msknorr/goat-public) as a baseline, lets the annotator correct them as needed, and stores the corrected annotations.
 The program requires in input only the path to the dataset folder containing the images to annotate. This dataset is required to have a specific structure: the images need to be stored in a subfolder named `images`, while the annotations will be stored in a separate subfolder named `annotations`. The images can be stored in a structured manner separating for example images coming form different patients and/or different treatments, this structured will be automatically replicated in the `annotations` folder.
 

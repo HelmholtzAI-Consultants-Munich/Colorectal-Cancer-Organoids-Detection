@@ -1,49 +1,151 @@
-import torch
-import numpy as np
-from glob import glob
-import matplotlib.pyplot as plt
-
-#matplotlib.use('Agg')
 import os
 from datetime import datetime
 import time
 
-def FitterMaskRCNN():
+import torch
+from torch import nn, tensor
+import numpy as np
+from glob import glob
+import matplotlib.pyplot as plt
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
+import gdown
+import neptune
+from tqdm import tqdm
 
-    def __init__():
-        pass
+from src.model.model import maskRCNNModel
 
-    def fit(self, model_path, train_loader, validation_loader, device):
-        # initialize model and load weights
-        # initialize optimizer and scheduler
-        # iterate through epochs
-        #   train_one_epoch
-        #   validate
-        #   evaluate patience
+class FitterMaskRCNN():
 
-        pass
+    def __init__(self, id: str):
+        # Set the device between GPU, MPS, or CPU
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.id = id
 
-    def train_one_epoch(self, model, train_loader):
-        # iterate through batches:
-        #   forward pass
-        #   backward pass
-        #   optimizer step
-        #   zero grad
+    def fit(self, train_loader, val_loader, hyperparams, model_dir):
+        # Initialize the model
+        model = self.initialize_model()
+        # Initialize optimizer and scheduler
+        optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
+        # Set up the neptune experiment
+        run = neptune.init_run(
+            project=f'DKFZ-Organoid-Detection', #-{time.strftime("%Y-%m-%d-%H:%M:%S")}', 
+            tags=["MaskRCNN", "Organoids"],
+            custom_run_id=str(self.id),
+        )
+        run.assign({"hyperparameters": hyperparams})
 
-        pass
+        # Iterate through epochs
+        patience = 0
+        best_map = 0.
+        best_epoch = None
+        for epoch in range(hyperparams["n_epochs"]):
+            # Train one epoch
+            losses = self.train_one_epoch(model, train_loader, optimizer)
+            self.log_metric(losses, "training_losses", run)
+            # Validate
+            val_metric = self.evaluate_one_epoch(model, val_loader)
+            self.log_metric(val_metric, "validation_metrics", run)
+            # Update the scheduler
+            scheduler.step(metrics=val_metric["map"])
+            # Evaluate patience
+            if val_metric["map"] > best_map:
+                best_map = val_metric["map"]
+                best_epoch = epoch
+                patience = 0
+            else:
+                patience += 1
+                if patience > hyperparams["patience"]:
+                    break
+            print(f"Epoch {epoch}: Validation mAP: {val_metric['map']} (best mAP: {best_map} at epoch {best_epoch})")
+        run["best_val_map"] = best_map
+        run.stop()
+        path = os.path.join(model_dir, f"best-checkpoint-{self.id}.bin")
+        self.save(model, path)
+        return best_map
 
-    def validate(self, model, val_loader):
-        # iterate through batches:
-        #   forward pass
-        #   calculate loss
-        #   calculate metrics
+    def train_one_epoch(self, model, train_loader, optimizer):
+        model.train()
+        losses_tracker = LossesTracker()
+        # Iterate through batches
+        for images, targets in tqdm(train_loader):
+            # Move to the device
+            images = [image.to(self.device) for image in images]
+            targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+            # Forward pass
+            losses = model(images, targets)
+            losses_tracker.update(losses, len(images))
+            # Backward pass
+            optimizer.zero_grad()
+            losses_tracker.current_loss.backward()
+            optimizer.step()
+        return losses_tracker.average()
 
-        pass
+    def evaluate_one_epoch(self, model, loader):
+        model.eval()
+        map = MeanAveragePrecision(max_detection_thresholds=None)
+        # Iterate through batches:
+        for images, targets in loader:
+            # Move to the device
+            images = [image.to(self.device) for image in images]
+            targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+            # Forward pass
+            outputs = model(images)
+            # Compute metrics
+            map.update(outputs, targets)
+        metric = map.compute()
+        return metric
 
-    def save(self, path):
+    def save(self, model, path):
         # save the model
-        pass
+        torch.save({"model_state_dict": model.state_dict()}, path)
 
+    def initialize_model(self) -> nn.Module:
+        #model
+        model_initial_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
+        if not os.path.exists(model_initial_weights_path):
+            gdown.download(
+                id="1AcrYCBR5-kg91C61boj221t1X_SVX8Hv",  
+                output=model_initial_weights_path,
+            )
+        model = maskRCNNModel() # TODO: Freeze the weights if we want to train under these conditions
+        model.load_state_dict(torch.load(model_initial_weights_path, map_location=self.device, weights_only=False)['model_state_dict'])
+        model.to(self.device)
+        return model
+    
+    def log_metric(self, losses, metric_type,run):
+        for key, value in losses.items():           
+            run[f"{metric_type}/{key}"].append(value)
+
+
+
+class LossesTracker:
+
+    def __init__(self):
+        self._reset()
+
+    def update(self, losses, batch_size):
+        for name, value in losses.items():
+            self.losses[name] += value * float(batch_size)
+        self.current_loss = sum(losses.values()) 
+        self.cumulative_batch_size += batch_size  
+        
+    def average(self):
+        average_losses  = {name: loss / self.cumulative_batch_size for name, loss in self.losses.items()}
+        self._reset()
+        return average_losses
+
+    def _reset(self):
+        self.losses = {
+            "loss_classifier": tensor(0.),
+            "loss_box_reg": tensor(0.),
+            "loss_mask": tensor(0.),
+            "loss_objectness": tensor(0.),
+            "loss_rpn_box_reg": tensor(0.),
+        }
+        self.current_loss = tensor(0.)
+        self.cumulative_batch_size = tensor(0.)
+    
 
 ### original code form GOAT repo ###
 

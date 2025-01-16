@@ -82,7 +82,7 @@ class MaskRCNNDataset(Dataset):
         targets_df = pd.read_csv(label_path, sep=',', index_col=0)
         boxes = self.load_boxes(targets_df)
         masks = self.load_masks(targets_df, image.shape[0:2])
-        labels = torch.ones((boxes.shape[0]), dtype=torch.uint64)
+        labels = torch.ones((boxes.shape[0]), dtype=torch.int64)
         iscrowd = torch.zeros((boxes.shape[0]), dtype=torch.int64)
         image_id = torch.tensor([index])
         area = (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
@@ -91,7 +91,7 @@ class MaskRCNNDataset(Dataset):
         return image, targets
     
     def load_image(self, img_path):
-        image = cv2.imread(img_path, cv2.IMREAD_COLOR).astype(np.float64)
+        image = cv2.imread(img_path, cv2.IMREAD_COLOR).astype(np.float32)
         image = torch.from_numpy(image)
         image = image.permute(2, 0, 1)
         image /= 255.0

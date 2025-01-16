@@ -37,6 +37,9 @@ dependencies = [
     "albumentations",
     "matplotlib",
     "gdown",
+    "torchmetrics",
+    "pycocotools",
+    "optuna",
 ]
 
 

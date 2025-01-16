@@ -1,0 +1,21 @@
+### Dataset ###
+train_dataset_path: dataset/train_dataset
+val_dataset_path: dataset/val_dataset
+test_dataset_path: dataset/test_dataset
+
+### Optimizer ###
+n_trails: 100
+n_epochs: 100
+patience: 10
+batch_size:
+  min: 128
+  max: 256
+learning_rate:
+  min: 0.0001
+  max: 0.01
+
+### Model ###
+model_name: mask_rcnn
+model_dir: model/fine_tune
+
+
