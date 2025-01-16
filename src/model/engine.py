@@ -34,7 +34,12 @@ class FitterMaskRCNN():
             custom_run_id=str(self.id),
         )
         run.assign({"hyperparameters": hyperparams})
+        print(f"Starting training {self.id}")
 
+        # compute the original mAP
+        val_metric = self.evaluate_one_epoch(model, val_loader)
+        print(f"Original model: Validation mAP: {val_metric['map']}")
+        
         # Iterate through epochs
         patience = 0
         best_map = 0.
