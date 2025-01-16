@@ -85,14 +85,17 @@ class FitterMaskRCNN():
         model.eval()
         map = MeanAveragePrecision(max_detection_thresholds=None)
         # Iterate through batches:
-        for images, targets in loader:
-            # Move to the device
-            images = [image.to(self.device) for image in images]
-            targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
-            # Forward pass
-            outputs = model(images)
-            # Compute metrics
-            map.update(outputs, targets)
+        with torch.no_grad():
+            for images, targets in loader:
+                # Move to the device
+                images = [image.to(self.device) for image in images]
+                targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+                # Forward pass
+                outputs = model(images)
+                # Compute metrics
+                map.update(outputs, targets)
+                del images, targets, outputs
+                torch.cuda.empty_cache()
         metric = map.compute()
         return metric
 
@@ -126,7 +129,7 @@ class LossesTracker:
 
     def update(self, losses, batch_size):
         for name, value in losses.items():
-            self.losses[name] += value * float(batch_size)
+            self.losses[name] += value * batch_size
         self.current_loss = sum(losses.values()) 
         self.cumulative_batch_size += batch_size  
         
