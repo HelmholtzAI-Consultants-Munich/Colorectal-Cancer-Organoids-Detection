@@ -8,3 +8,4 @@ best-checkpoint-114epoch.bin
 .neptune
 model
 notebooks
+.DS_Store
