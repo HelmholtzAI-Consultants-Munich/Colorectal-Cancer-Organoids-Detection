@@ -29,7 +29,7 @@ def get_train_transforms():
             A.OneOf([
                 A.ShiftScaleRotate(shift_limit=0.30, scale_limit=[-0.5, 1.0], rotate_limit=45, interpolation=1, # weights3/ -0.5 - 1.0
                                    border_mode=0, always_apply=False, p=1),
-                A.RandomResizedCrop(512, 512, scale=(0.1, 1.0), ratio=(0.75, 1.33), interpolation=1,
+                A.RandomResizedCrop(size = (512, 512), scale=(0.1, 1.0), ratio=(0.75, 1.33), interpolation=1,
                                     always_apply=False, p=1),
             ], p=0.5),
             A.ToGray(p=1),
