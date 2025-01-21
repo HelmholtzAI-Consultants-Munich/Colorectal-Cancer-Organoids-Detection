@@ -4,8 +4,8 @@ val_dataset_path: dataset/example_mask
 test_dataset_path: dataset/example_mask
 
 ### Optimizer ###
-n_trails: 1
-n_epochs: 10
+n_trails: 10
+n_epochs: 100
 patience: 10
 batch_size:
   min: 1
