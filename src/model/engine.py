@@ -134,6 +134,7 @@ class LossesTracker:
 
     def update(self, losses, batch_size):
         for name, value in losses.items():
+            value = value.cpu()
             self.losses[name] += value * batch_size
         self.current_loss = sum(losses.values()) 
         self.cumulative_batch_size += batch_size  
