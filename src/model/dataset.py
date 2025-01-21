@@ -81,7 +81,7 @@ class MaskRCNNDataset(Dataset):
         # extract the vounding boxes and the masks tenors
         targets_df = pd.read_csv(label_path, sep=',', index_col=0)
         boxes = self.load_boxes(targets_df)
-        masks = self.load_masks(targets_df, image.shape[0:2])
+        masks = self.load_masks(targets_df, image.shape[1:])
         labels = torch.ones((boxes.shape[0]), dtype=torch.int64)
         iscrowd = torch.zeros((boxes.shape[0]), dtype=torch.int64)
         image_id = torch.tensor([index])
