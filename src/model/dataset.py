@@ -98,11 +98,15 @@ class MaskRCNNDataset(Dataset):
         return image
     
     def load_boxes(self, targets_df: pd.DataFrame) -> torch.Tensor:
+        if targets_df.empty:
+            return torch.empty((0,4))
         boxes = targets_df[['x1', 'y1', 'x2', 'y2']].values
         boxes = torch.as_tensor(boxes, dtype=torch.float64)
         return boxes
 
     def load_masks(self, targets_df: pd.DataFrame, image_size: Tuple[int]) -> torch.Tensor:
+        if targets_df.empty:
+            return torch.empty((0, *image_size))
         rle_masks = targets_df['mask'].values
         masks = []
         for rle in rle_masks:
