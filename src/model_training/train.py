@@ -1,6 +1,7 @@
 import argparse
 import os
 import shutil
+from time import time
 
 import gdown
 import yaml
@@ -25,15 +26,19 @@ def main():
     with open(args.config, "r") as file:
         config = yaml.safe_load(file)
 
+    # create model folder
+    config["model_dir"] = os.path.join(config["model_dir"], str(int(time())))
+    os.makedirs(config["model_dir"], exist_ok=True)
+
     # 2. Train model: (see goat/engine.py)
-    study = optuna.create_study(direction="minimize")
+    study = optuna.create_study(direction="maximize")
     study.optimize(Objective(config), n_trials=config["n_trails"])
 
     # 3. Save best trial
     print(f"Best trial: {study.best_trial.value}")
     shutil.copy(
         os.path.join(config["model_dir"], f"best-checkpoint-{study.best_trial.number}.bin"), 
-        os.path.join(config["model_dir"], "/best_model.pth")
+        os.path.join(config["model_dir"], "best_model.pth")
     )
 
 

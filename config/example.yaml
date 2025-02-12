@@ -1,20 +1,26 @@
 ### Dataset ###
-train_dataset_path: dataset/example_mask
-val_dataset_path: dataset/example_mask
-test_dataset_path: dataset/example_mask
+train_dataset_path: dataset/train
+val_dataset_path: dataset/validation
+test_dataset_path: dataset/validation
 
 ### Optimizer ###
-n_trails: 10
-n_epochs: 100
+n_trails: 5
+n_epochs: 2
 patience: 10
 batch_size:
   min: 1
-  max: 8
+  max: 4
 learning_rate:
   min: 0.00001
-  max: 0.0001
+  max: 0.001
+freeze_backbone: True
+
 
 ### Model ###
 model_name: mask_rcnn
 model_dir: model/fine_tune
+
+### Neptune ###
+neptune_workspace: francesco-campi
+neptune_project: DKFZ-Organoid-Detection-example
 

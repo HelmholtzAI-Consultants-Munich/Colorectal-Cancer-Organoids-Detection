@@ -1,13 +1,14 @@
 from typing import List, Tuple
 
 import torch
+import numpy as np
 
 
 def run_length_encode(mask: torch.tensor) -> List[int]:
     """Convert a mask to RLE.
     
     Args:
-        mask (np.ndarray): binary mask
+        mask (torch.tensor): binary mask
         
     Returns:
         str: RLE encoded mask
@@ -36,7 +37,7 @@ def run_length_decode(rle: List[int], shape: Tuple[int, int]) -> torch.tensor:
     # convert the RLE to a list of integers
     rle = list(map(int, rle.split()))
     assert sum(rle) == shape[0]*shape[1], f"Mask size ({sum(rle)}) does not match the shape ({shape[0]*shape[1]})"
-    mask = torch.zeros(shape[0]*shape[1], dtype=torch.uint8)
+    mask = np.zeros(shape[0]*shape[1], dtype=np.uint8)
     starts  = rle[0::2]
     lengths = rle[1::2]
     curr_pos = 0

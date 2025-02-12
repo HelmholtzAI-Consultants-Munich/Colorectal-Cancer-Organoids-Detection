@@ -34,7 +34,7 @@ def maskRCNNModelFreeze() -> MaskRCNN:
     """
     model = maskRCNNModel()
     model.backbone.parameters.requires_grad = False
-    model.rpn.parameters.requires_grad = False
+    # model.rpn.parameters.requires_grad = False
     model.roi_heads.mask_head.parameters.requires_grad = False
     return model
 

@@ -6,4 +6,4 @@ CORRECTED_IMAGES_FILE_ORG = ".corrected_images_organoids.txt"
 ANNOTATE_IMAGES_FILE_FIB = ".annotated_images_fibroblasts.txt"
 BBOXES_SUFF = "_box"
 POINTS_SUFF = "_point"
-CONFIDENCE_THRESHOLD = 0.9
+CONFIDENCE_THRESHOLD = 0.

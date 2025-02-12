@@ -53,6 +53,8 @@ class Objective:
             val_loader, 
             hyperparams,
             self.config["model_dir"],
+            self.config["neptune_workspace"],
+            self.config["neptune_project"],
         )
 
         # return the validation metric

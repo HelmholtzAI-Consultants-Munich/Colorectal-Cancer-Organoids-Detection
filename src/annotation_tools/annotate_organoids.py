@@ -29,7 +29,6 @@ def main():
     assert os.path.exists(images), "The dataset path does not contain an images subfolder."
     model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
     if not os.path.exists(model_weights_path):
-        
         gdown.download(
             id="1AcrYCBR5-kg91C61boj221t1X_SVX8Hv",  
             output=model_weights_path,

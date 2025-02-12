@@ -54,8 +54,7 @@ def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Mod
         "scores": torch.ones(len(bboxes)),
         "labels": labels,
     }]
-    print(image_size)
-    detections = model.transform.postprocess(detections, image_norm.image_sizes, [image_size[::-1]])
+    detections = model.transform.postprocess(detections, image_norm.image_sizes, [image_size])
     return detections[0]["masks"].squeeze(1).detach().cpu()
     
 def main():

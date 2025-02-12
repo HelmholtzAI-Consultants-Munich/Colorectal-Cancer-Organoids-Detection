@@ -1,5 +1,5 @@
 import argparse
-from typing import List
+from typing import List, Tuple
 import os
 
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, QMessageBox
@@ -179,6 +179,15 @@ def bbox_box_to_xyxy(bboxes: List[Box]) -> pd.DataFrame:
     for i, bbox in enumerate(bboxes):
         bboxes_df.loc[i] = [bbox.left, bbox.top, bbox.right, bbox.bottom]
     return bboxes_df.astype(np.int16)
+
+def clip_xyxy_to_image(bboxes: pd.DataFrame, image_shape: Tuple[int, int]) -> pd.DataFrame:
+    """Clip the bounding boxes to the image shape. The image shape is in the format (height, width).
+    """
+    bboxes.loc[:, "x1"] = bboxes["x1"].clip(lower=0, upper=image_shape[1])
+    bboxes.loc[:, "x2"] = bboxes["x2"].clip(lower=0, upper=image_shape[1])
+    bboxes.loc[:, "y1"] = bboxes["y1"].clip(lower=0, upper=image_shape[0])
+    bboxes.loc[:, "y2"] = bboxes["y2"].clip(lower=0, upper=image_shape[0])
+    return bboxes
 
 class NextDialog(QDialog):
     """Dialoge window to confirm passing to the next image.

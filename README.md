@@ -97,11 +97,11 @@ Given a dataset of microscopy images, these tools allow to annotate them with th
 
 ### Merging Multiple Annotations
 
-If two different annotators independently annotated the same dataset it is possible to merge the two annotations. The tool uses the Hungarian algorithm to match boxes form the two annotators that have maximal intersection over Union (IoU) score nad merges the "matching" boxes by averaging the edges. In addition, it is possible to set a minimum threshold for the IoU score below which two boxes are not matched by the algorithm (```-iou``` parameter). Finally, the user can decide whether to include or to discard the unmatched bounding boxes in the final annotation (```--keep``` or ```--drop``` flags).
+If two different annotators independently annotated the same dataset it is possible to merge the two annotations. The tool uses the Hungarian algorithm to match boxes form the two annotators that have maximal intersection over Union (IoU) score nad merges the "matching" boxes by averaging the edges. In addition, it is possible to set a minimum threshold for the IoU score below which two boxes are not matched by the algorithm (```-iou``` parameter, defailt value is 0.5). Finally, the user can decide whether to include or to discard the unmatched bounding boxes in the final annotation with ```--keep``` or ```--drop``` flags (default ```--keep```).
 
 To run the tool write one of the following command in the terminal depending if you want to keep or discard unmatched boxes, and replace the dataset paths and the iou threshold with the desired ones:
-- **keep** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path -iou=  --keep```
-- **discard** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path -iou=  --drop```
+- **keep** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path --keep```
+- **discard** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path  --drop```
 
 **Remark**: this tool does not support fibroblasts annotations
 

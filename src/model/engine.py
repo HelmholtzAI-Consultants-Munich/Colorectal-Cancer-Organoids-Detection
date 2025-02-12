@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 import time
+from copy import deepcopy
 
 import torch
 from torch import nn, tensor
@@ -10,6 +11,7 @@ import matplotlib.pyplot as plt
 from torchmetrics.detection.mean_ap import MeanAveragePrecision
 import gdown
 import neptune
+from neptune.management import create_project, get_project_list
 from tqdm import tqdm
 
 from src.model.model import maskRCNNModel
@@ -21,19 +23,22 @@ class FitterMaskRCNN():
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.id = id
 
-    def fit(self, train_loader, val_loader, hyperparams, model_dir):
+    def fit(self, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
         # Initialize the model
         model = self.initialize_model()
         # Initialize optimizer and scheduler
         optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
         # Set up the neptune experiment
+        if f"{neptune_workspace}/{neptune_project}" not in get_project_list():
+            print("hi")
+            create_project(name=neptune_project, workspace=neptune_workspace)
         run = neptune.init_run(
-            project=f'DKFZ-Organoid-Detection', #-{time.strftime("%Y-%m-%d-%H:%M:%S")}', 
-            tags=["MaskRCNN", "Organoids"],
-            custom_run_id=str(self.id),
+            project=f"{neptune_workspace}/{neptune_project}", 
         )
         run.assign({"hyperparameters": hyperparams})
+        run["job_id"] = os.path.split(model_dir)[-1]
+        run["local_id"] = self.id
         print(f"Starting training {self.id}")
 
         # compute the original mAP
@@ -44,6 +49,7 @@ class FitterMaskRCNN():
         patience = 0
         best_map = 0.
         best_epoch = None
+        best_checkpoint = deepcopy(model.state_dict())
         for epoch in range(hyperparams["n_epochs"]):
             # Train one epoch
             losses = self.train_one_epoch(model, train_loader, optimizer)
@@ -58,6 +64,7 @@ class FitterMaskRCNN():
                 best_map = val_metric["map"]
                 best_epoch = epoch
                 patience = 0
+                best_checkpoint = deepcopy(model.state_dict())
             else:
                 patience += 1
                 if patience > hyperparams["patience"]:
@@ -66,7 +73,7 @@ class FitterMaskRCNN():
         run["best_val_map"] = best_map
         run.stop()
         path = os.path.join(model_dir, f"best-checkpoint-{self.id}.bin")
-        self.save(model, path)
+        self.save(best_checkpoint, path)
         return best_map
 
     def train_one_epoch(self, model, train_loader, optimizer):
@@ -88,7 +95,10 @@ class FitterMaskRCNN():
 
     def evaluate_one_epoch(self, model, loader):
         model.eval()
-        map = MeanAveragePrecision(max_detection_thresholds=None)
+        map = MeanAveragePrecision(
+            max_detection_thresholds=None,
+            )
+        map.warn_on_many_detections = False
         # Iterate through batches:
         with torch.no_grad():
             for images, targets in loader:
@@ -104,9 +114,9 @@ class FitterMaskRCNN():
         metric = map.compute()
         return metric
 
-    def save(self, model, path):
+    def save(self, best_checkpoint, path):
         # save the model
-        torch.save({"model_state_dict": model.state_dict()}, path)
+        torch.save({"model_state_dict": best_checkpoint}, path)
 
     def initialize_model(self) -> nn.Module:
         #model
