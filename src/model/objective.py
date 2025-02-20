@@ -39,6 +39,10 @@ class Objective:
             high=self.config["learning_rate"]["max"],
             log = True,
         )
+        hyperparams["freeze_weights"] = trial.suggest_categorical(
+            name="freeze_weights",
+            choices=self.config["freeze_weights"],
+        )
         hyperparams["n_epochs"] = self.config["n_epochs"]
         hyperparams["patience"] = self.config["patience"]
 

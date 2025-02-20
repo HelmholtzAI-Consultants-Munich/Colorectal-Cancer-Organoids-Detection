@@ -13,7 +13,9 @@ batch_size:
 learning_rate:
   min: 0.00001
   max: 0.001
-freeze_backbone: True
+freeze_weights:
+  - True
+  - False
 
 
 ### Model ###

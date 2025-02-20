@@ -14,7 +14,7 @@ import neptune
 from neptune.management import create_project, get_project_list
 from tqdm import tqdm
 
-from src.model.model import maskRCNNModel
+from src.model.model import maskRCNNModel, maskRCNNModelFreeze
 
 class FitterMaskRCNN():
 
@@ -25,7 +25,7 @@ class FitterMaskRCNN():
 
     def fit(self, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
         # Initialize the model
-        model = self.initialize_model()
+        model = self.initialize_model(hyperparams["freeze_weights"])
         # Initialize optimizer and scheduler
         optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=3, verbose=True)
@@ -77,6 +77,7 @@ class FitterMaskRCNN():
         return best_map
 
     def train_one_epoch(self, model, train_loader, optimizer):
+        torch.cuda.empty_cache()
         model.train()
         losses_tracker = LossesTracker()
         # Iterate through batches
@@ -118,7 +119,7 @@ class FitterMaskRCNN():
         # save the model
         torch.save({"model_state_dict": best_checkpoint}, path)
 
-    def initialize_model(self) -> nn.Module:
+    def initialize_model(self, freeze_weights) -> nn.Module:
         #model
         model_initial_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
         if not os.path.exists(model_initial_weights_path):
@@ -126,7 +127,10 @@ class FitterMaskRCNN():
                 id="1AcrYCBR5-kg91C61boj221t1X_SVX8Hv",  
                 output=model_initial_weights_path,
             )
-        model = maskRCNNModel() # TODO: Freeze the weights if we want to train under these conditions
+        if freeze_weights:
+            model = maskRCNNModelFreeze()
+        else:
+            model = maskRCNNModel() # TODO: Freeze the weights if we want to train under these conditions
         model.load_state_dict(torch.load(model_initial_weights_path, map_location=self.device, weights_only=False)['model_state_dict'])
         model.to(self.device)
         return model

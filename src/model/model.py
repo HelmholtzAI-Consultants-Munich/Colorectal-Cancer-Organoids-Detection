@@ -33,9 +33,12 @@ def maskRCNNModelFreeze() -> MaskRCNN:
     :rtype: MaskRCNN
     """
     model = maskRCNNModel()
-    model.backbone.parameters.requires_grad = False
-    # model.rpn.parameters.requires_grad = False
-    model.roi_heads.mask_head.parameters.requires_grad = False
+    # freeze backbone
+    for param in model.backbone.parameters():
+        param.requires_grad = False
+    # freeze mask head
+    for param in model.roi_heads.mask_head.parameters():
+        param.requires_grad = False
     return model
 
 
