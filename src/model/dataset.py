@@ -1,4 +1,5 @@
 import os
+import random
 
 import numpy as np
 import pandas as pd
@@ -48,13 +49,20 @@ class MaskRCNNDataset(Dataset):
         image_path = self.images_paths[index]
         label_path = self.labels_paths[index]
         image = self.load_image(image_path)
+        targets_df = pd.read_csv(label_path, sep=',', index_col=0)
+
+        # sample the annotator if we have multiple ones
+        annotator = None
+        if "annotator" in targets_df.columns:
+            annotator = random.choice(targets_df["annotator"].unique())
+            targets_df = targets_df[targets_df["annotator"] == annotator]
 
         # extract the bounding boxes and the masks tenors
-        targets_df = pd.read_csv(label_path, sep=',', index_col=0)
         boxes = self.load_boxes(targets_df, image.shape[:-1])
         masks = self.load_masks(targets_df, image.shape[:-1])
         labels = [1 for _ in range(len(boxes))]
 
+        
         # apply augmentations
         augmented = self.transforms(image=image, bboxes=boxes, masks=masks, labels=labels)
         image = augmented['image']
