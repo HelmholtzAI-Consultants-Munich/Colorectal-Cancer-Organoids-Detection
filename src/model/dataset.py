@@ -53,7 +53,7 @@ class MaskRCNNDataset(Dataset):
 
         # sample the annotator if we have multiple ones
         annotator = None
-        if "annotator" in targets_df.columns:
+        if "annotator" in targets_df.columns and not targets_df.empty:
             annotator = random.choice(targets_df["annotator"].unique())
             targets_df = targets_df[targets_df["annotator"] == annotator]
 
