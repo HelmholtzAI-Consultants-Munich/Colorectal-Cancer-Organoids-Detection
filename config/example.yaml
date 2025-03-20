@@ -1,7 +1,7 @@
 ### Dataset ###
 train_dataset_path: dataset/train
-val_dataset_path: dataset/validation
-test_dataset_path: dataset/validation
+val_dataset_path: dataset/val
+test_dataset_path: dataset/test
 
 ### Optimizer ###
 n_trails: 5
