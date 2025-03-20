@@ -18,8 +18,9 @@ learning_rate:
 freeze_weights:
   - True
   - False
+
 data_augmentation: 
-  - True
+  - False
 
 ### Model ###
 model_name: mask_rcnn

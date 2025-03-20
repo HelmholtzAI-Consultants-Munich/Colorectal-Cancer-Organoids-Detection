@@ -15,9 +15,6 @@ class Objective:
         self.config = config
     
         # Initialize the dataset
-        self.train_dataset = MaskRCNNDataset(config["train_dataset_path"], datatype="train")
-        self.val_dataset = MaskRCNNDataset(config["val_dataset_path"], datatype="eval")
-        self.test_dataset = MaskRCNNDataset(config["test_dataset_path"], datatype="eval")
         self.collate_fn = lambda x: tuple(zip(*x))
         
 
@@ -27,11 +24,9 @@ class Objective:
         fitter = FitterMaskRCNN(id=trial.number)
         # Generate the hyperparameters
         hyperparams = {}
-        hyperparams["batch_size"] = trial.suggest_int(
+        hyperparams["batch_size"] = trial.suggest_categorical(
             name="batch_size", 
-            low=self.config["batch_size"]["min"],
-            high=self.config["batch_size"]["max"],
-            log = True,
+            choices=self.config["batch_size"],
         )
         hyperparams["learning_rate"] = trial.suggest_float(
             name="learning_rate",
@@ -43,13 +38,22 @@ class Objective:
             name="freeze_weights",
             choices=self.config["freeze_weights"],
         )
+        hyperparams["data_augmentation"] = trial.suggest_categorical(
+            name="data_augmentation",
+            choices=self.config["data_augmentation"],
+        )
         hyperparams["n_epochs"] = self.config["n_epochs"]
         hyperparams["patience"] = self.config["patience"]
+        hyperparams["accumulation_steps"] = hyperparams["batch_size"] // 4
 
+        # Initialize the dataset
+        train_dataset = MaskRCNNDataset(self.config["train_dataset_path"], datatype="train", data_augmentation=hyperparams["data_augmentation"])
+        val_dataset = MaskRCNNDataset(self.config["val_dataset_path"], datatype="eval")
+        test_dataset = MaskRCNNDataset(self.config["test_dataset_path"], datatype="eval")
         # Initialize the dataloader 
-        train_loader = DataLoader(self.train_dataset, batch_size=hyperparams["batch_size"], shuffle=True, collate_fn=self.collate_fn)
-        val_loader = DataLoader(self.val_dataset, batch_size=hyperparams["batch_size"], shuffle=False, collate_fn=self.collate_fn)
-        test_loader = DataLoader(self.test_dataset, batch_size=hyperparams["batch_size"], shuffle=False, collate_fn=self.collate_fn)
+        train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True, collate_fn=self.collate_fn)
+        val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False, collate_fn=self.collate_fn)
+        test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False, collate_fn=self.collate_fn)
 
         # Train the model
         val_mpa = fitter.fit( 
