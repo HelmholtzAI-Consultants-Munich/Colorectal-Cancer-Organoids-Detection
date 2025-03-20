@@ -4,19 +4,23 @@ val_dataset_path: dataset/val
 test_dataset_path: dataset/test
 
 ### Optimizer ###
-n_trails: 5
-n_epochs: 2
+n_trails: 30
+n_epochs: 5
 patience: 10
 batch_size:
-  min: 1
-  max: 4
+  - 4
+  - 8
+  - 16
+  - 32
 learning_rate:
   min: 0.00001
   max: 0.001
 freeze_weights:
   - True
   - False
-
+data_augmentation: 
+  - False
+  - True
 
 ### Model ###
 model_name: mask_rcnn

@@ -17,7 +17,7 @@ from src.utils.annotation_utils import clip_xyxy_to_image
 
 class MaskRCNNDataset(Dataset):
 
-    def __init__(self, dataset_path: str, datatype: str = "train", resize: int = 512):
+    def __init__(self, dataset_path: str, datatype: str = "train", data_augmentation: bool = True):
         """
         Dataset class for MaskRCNN model.
 
@@ -25,19 +25,18 @@ class MaskRCNNDataset(Dataset):
         :type dataset_path: str
         :param datatype: type of the dataset (train, eval)
         :type datatype: str
-        :param resize: size of the image to resize to
-        :type resize: int
+        :param data_augmentation: whether to apply data augmentation
+        :type data_augmentation: bool
         """
 
         check_dataset(dataset_path)
         self.images_paths = get_images_paths(dataset_path)
         self.labels_paths = get_annotations_paths(self.images_paths, dataset_path)
-        self.resize = resize
 
-        if datatype == "train":
-            self.transforms = self._get_train_transforms()
-        elif datatype == "eval":
-            self.transforms = self._get_eval_transforms()
+        if datatype == "train" and data_augmentation:
+            self.transforms = self._get_augmentation_transforms()
+        elif datatype == "eval" or not data_augmentation:
+            self.transforms = self._get_base_transforms()
         else:
             raise ValueError(f"Unknown datatype {datatype}")
 
@@ -103,36 +102,7 @@ class MaskRCNNDataset(Dataset):
             masks.append(run_length_decode(rle, image_size))
         return masks
     
-    def _get_train_transforms_old(self):
-        return A.Compose(
-        [
-            A.OneOf([
-                A.HueSaturationValue(hue_shift_limit=0.20, sat_shift_limit=0.10,
-                                     val_shift_limit=0.20, p=0.5),
-                A.RandomBrightnessContrast(brightness_limit=0.2,
-                                           contrast_limit=0.2, p=0.5),
-            ], p=0.7),
-
-            A.OneOf([
-                A.ShiftScaleRotate(shift_limit=0.30, scale_limit=[-0.5, 1.0], rotate_limit=45, interpolation=1, # weights3/ -0.5 - 1.0
-                                   border_mode=0, always_apply=False, p=1),
-                A.RandomResizedCrop(size = (512, 512), scale=(0.8, 1.0), ratio=(0.75, 1.33), interpolation=1,
-                                    always_apply=False, p=1),
-            ], p=0.5),
-            A.ToGray(p=1),
-            A.HorizontalFlip(p=0.5),
-            A.VerticalFlip(p=0.5),
-            A.RandomRotate90(p=0.5),
-            A.Blur(blur_limit=15, p=0.5),
-            A.Resize(width=self.resize, height=self.resize, p=1),
-            ToTensorV2(p=1.0),
-
-        ],
-        p=1.0,
-        bbox_params={'format': 'pascal_voc', 'min_area': 2, 'min_visibility': 0.3, 'label_fields': ['labels']}
-    )
-
-    def _get_train_transforms(self):
+    def _get_augmentation_transforms(self):
         return A.Compose(
             [
                 # leave the image unchenged with 0.2 probability
@@ -166,11 +136,10 @@ class MaskRCNNDataset(Dataset):
         )
 
 
-    def _get_eval_transforms(self):
+    def _get_base_transforms(self):
         return A.Compose(
         [
             A.ToGray(p=1),
-            # A.Resize(height=self.resize, width=self.resize, p=1.0),
             ToTensorV2(p=1.0),
         ],
         p=1.0,

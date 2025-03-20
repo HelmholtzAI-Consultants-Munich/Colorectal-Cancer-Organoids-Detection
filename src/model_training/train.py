@@ -32,7 +32,7 @@ def main():
 
     # 2. Train model: (see goat/engine.py)
     study = optuna.create_study(direction="maximize")
-    study.optimize(Objective(config), n_trials=config["n_trails"])
+    study.optimize(Objective(config), n_trials=config["n_trails"], gc_after_trial=True)
 
     # 3. Save best trial
     print(f"Best trial: {study.best_trial.value}")
