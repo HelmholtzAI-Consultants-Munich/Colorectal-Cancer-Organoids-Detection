@@ -122,6 +122,57 @@ class FitterMaskRCNN():
             torch.cuda.empty_cache()
         metric = map.compute()
         return metric
+    
+    @torch.no_grad()
+    def evaluate_one_epoch_predictions(self, model, loader, confidence_threshold):
+        model.eval()
+        map = MeanAveragePrecision(
+            max_detection_thresholds=None,
+            )
+        map.warn_on_many_detections = False
+        predictions = []
+        # Iterate through batches:
+        for images, targets in tqdm(loader):
+            # Move to the device
+            images = [image.to(self.device) for image in images]
+            targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
+            # Forward pass
+            prediction = model(images)
+            map.update(prediction, targets)
+            # Filter predictions
+            predictions.extend(self.filter_predicitons(prediction, confidence_threshold))
+            del images, targets
+            torch.cuda.empty_cache()
+            metric = map.compute()
+        return predictions, metric
+    
+    @torch.no_grad()
+    def inference(self, model, loader, confidence_threshold):
+        model.eval()
+        predictions = []
+        for images, _ in loader:
+            images = [image.to(self.device) for image in images]
+            temp_predictions = model(images)
+            print(temp_predictions)
+            predictions.extend(self.filter_predicitons(temp_predictions, confidence_threshold))
+            del images
+        return predictions
+    
+
+    def filter_predicitons(self, predictions, confidence_threshold):
+        filtered_predictions = []
+        for prediciton in predictions.items():
+            boxes = prediciton["boxes"]
+            labels = prediciton["labels"]
+            scores = prediciton["scores"]
+            masks = prediciton["masks"]
+            slices = torch.where(scores > confidence_threshold)
+            boxes = boxes[slices]
+            labels = labels[slices]
+            scores = scores[slices]
+            masks = masks[slices]
+            filtered_predictions.append({"boxes": boxes, "labels": labels, "scores": scores,"mask": masks})
+        return filtered_predictions
 
     def save(self, best_checkpoint, path):
         # save the model
