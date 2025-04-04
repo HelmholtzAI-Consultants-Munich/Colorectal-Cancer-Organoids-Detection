@@ -115,19 +115,19 @@ class MaskRCNNDataset(Dataset):
                     ], p=1.0), 
                     # color transforms
                     A.OneOf([
-                        A.HueSaturationValue(hue_shift_limit=0.20, sat_shift_limit=0.10,
-                                        val_shift_limit=0.20, p=0.5),
-                        A.RandomBrightnessContrast(brightness_limit=0.2,
-                                            contrast_limit=0.2, p=0.5),
+                        A.HueSaturationValue(hue_shift_limit=0.10, sat_shift_limit=0.10,
+                                        val_shift_limit=0.10, p=0.5),
+                        A.RandomBrightnessContrast(brightness_limit=0.1,
+                                            contrast_limit=0.1, p=0.5),
                     ], p=1.0),
                     # another transformatiio....
                     A.OneOf([
-                        A.Blur(blur_limit=15, p=0.5),
+                        A.Blur(blur_limit=3, p=0.5),
                         A.GaussNoise(p=0.5),
                         A.Sharpen(p=0.5),
                     ], p=1.0),
-                    A.RandomCrop(1024, 1024),
-                ], p=0.8),
+                    # A.RandomCrop(1024, 1024),
+                ], p=0.2),
                 # Fixed transdormations for all images
                 A.ToGray(p=1.0),
                 ToTensorV2(p=1.0)

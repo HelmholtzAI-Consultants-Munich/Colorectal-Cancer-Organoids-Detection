@@ -19,9 +19,12 @@ from src.model.model import maskRCNNModel, maskRCNNModelFreeze
 
 class FitterMaskRCNN():
 
-    def __init__(self, id: str):
+    def __init__(self, id: str, device: str = None):
         # Set the device between GPU, MPS, or CPU
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        if device is not None:
+            self.device = torch.device(device)
+        else:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.id = id
 
     def fit(self, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
@@ -39,12 +42,12 @@ class FitterMaskRCNN():
         run.assign({"hyperparameters": hyperparams})
         run["job_id"] = os.path.split(model_dir)[-1]
         run["local_id"] = self.id
-        print(f"Starting training {self.id}")
+        print(f"Starting training {self.id} on device {self.device}")
 
         # compute the original mAP
         val_metric = self.evaluate_one_epoch(model, val_loader)
 
-        print(f"Original model: Validation mAP: {val_metric['map']}")
+        # print(f"Original model: Validation mAP: {val_metric['map']}")
         
         # Iterate through epochs
         patience = 0
@@ -53,9 +56,13 @@ class FitterMaskRCNN():
         best_checkpoint = deepcopy(model.state_dict())
         for epoch in range(hyperparams["n_epochs"]):
             # Train one epoch
+            print(f"Trial {self.id}, epoch {epoch}")
             losses = self.train_one_epoch(model, train_loader, optimizer, accumulation_steps=hyperparams["accumulation_steps"])
             self.log_metric(losses, "training_losses", run)
             # Validate
+            # print(f"Trial {self.id}, epoch {epoch}: Validation")
+            train_metric = self.evaluate_one_epoch(model, train_loader)
+            self.log_metric(train_metric, "training_metrics", run)
             val_metric = self.evaluate_one_epoch(model, val_loader)
             self.log_metric(val_metric, "validation_metrics", run)
             # Update the scheduler
@@ -71,7 +78,7 @@ class FitterMaskRCNN():
                 patience += 1
                 if patience > hyperparams["patience"]:
                     break
-            print(f"Epoch {epoch}: Validation mAP: {val_metric['map']} (best mAP: {best_map} at epoch {best_epoch})")
+            # print(f"Epoch {epoch}: Validation mAP: {val_metric['map']} (best mAP: {best_map} at epoch {best_epoch})")
         run["best_val_map"] = best_map
         run.stop()
         path = os.path.join(model_dir, f"best-checkpoint-{self.id}.bin")
@@ -86,7 +93,7 @@ class FitterMaskRCNN():
         model.train()
         losses_tracker = LossesTracker()
         # Iterate through batches
-        for step, (images, targets) in enumerate(tqdm(train_loader)):
+        for step, (images, targets) in enumerate(train_loader):
             # Move to the device
             images = [image.to(self.device) for image in images]
             targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
@@ -104,6 +111,7 @@ class FitterMaskRCNN():
 
     @torch.no_grad()
     def evaluate_one_epoch(self, model, loader):
+        torch.cuda.empty_cache()
         model.eval()
         map = MeanAveragePrecision(
             max_detection_thresholds=None,
@@ -116,10 +124,12 @@ class FitterMaskRCNN():
             targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
             # Forward pass
             outputs = model(images)
+            # Move outputs to CPU to prevent excessive GPU memory usage
+            outputs = [{k: v.detach().cpu() for k, v in o.items()} for o in outputs]
+            targets = [{k: v.cpu() for k, v in t.items()} for t in targets]
             # Compute metrics
             map.update(outputs, targets)
             del images, targets, outputs
-            torch.cuda.empty_cache()
         metric = map.compute()
         return metric
     
