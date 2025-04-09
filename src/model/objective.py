@@ -4,7 +4,6 @@ import os
 from optuna import Trial
 import torch
 from torch.utils.data import DataLoader
-import GPUtil
 
 from src.model.model import maskRCNNModel, maskRCNNModelFreeze
 from src.model.dataset import MaskRCNNDataset
@@ -25,7 +24,6 @@ class Objective:
     def __call__(self, trial: Trial):
 
         # choose the GPU if available
-        print(self.gpus)
         if torch.cuda.is_available():
             if trial.number < self.n_gpus:
                 device = f"cuda:{trial.number}"

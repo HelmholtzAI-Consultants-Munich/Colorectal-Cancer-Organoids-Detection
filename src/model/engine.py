@@ -160,10 +160,9 @@ class FitterMaskRCNN():
     def inference(self, model, loader, confidence_threshold):
         model.eval()
         predictions = []
-        for images, _ in loader:
+        for images, _ in tqdm(loader):
             images = [image.to(self.device) for image in images]
             temp_predictions = model(images)
-            print(temp_predictions)
             predictions.extend(self.filter_predicitons(temp_predictions, confidence_threshold))
             del images
         return predictions
@@ -171,7 +170,7 @@ class FitterMaskRCNN():
 
     def filter_predicitons(self, predictions, confidence_threshold):
         filtered_predictions = []
-        for prediciton in predictions.items():
+        for prediciton in predictions:
             boxes = prediciton["boxes"]
             labels = prediciton["labels"]
             scores = prediciton["scores"]
@@ -181,7 +180,9 @@ class FitterMaskRCNN():
             labels = labels[slices]
             scores = scores[slices]
             masks = masks[slices]
-            filtered_predictions.append({"boxes": boxes, "labels": labels, "scores": scores,"mask": masks})
+            # convert the masks to binary masks
+            masks = (masks > 0.5).type(torch.uint8)
+            filtered_predictions.append({"boxes": boxes, "labels": labels, "scores": scores,"masks": masks})
         return filtered_predictions
 
     def save(self, best_checkpoint, path):
