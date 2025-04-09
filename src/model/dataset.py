@@ -112,22 +112,22 @@ class MaskRCNNDataset(Dataset):
                         A.HorizontalFlip(p=0.5),
                         A.VerticalFlip(p=0.5),
                         A.RandomRotate90(p=0.5),
-                    ], p=1.0), 
+                    ], p=0.5), 
                     # color transforms
                     A.OneOf([
-                        A.HueSaturationValue(hue_shift_limit=0.10, sat_shift_limit=0.10,
-                                        val_shift_limit=0.10, p=0.5),
-                        A.RandomBrightnessContrast(brightness_limit=0.1,
-                                            contrast_limit=0.1, p=0.5),
-                    ], p=1.0),
+                        A.HueSaturationValue(hue_shift_limit=[-2, 2], sat_shift_limit=[-2, 2],
+                                        val_shift_limit=[-2, 2], p=0.5),
+                        A.RandomBrightnessContrast(brightness_limit=[-0.05, 0.05],
+                                            contrast_limit=[-0.05, 0.05], p=0.5),
+                    ], p=0.5),
                     # another transformatiio....
                     A.OneOf([
-                        A.Blur(blur_limit=3, p=0.5),
-                        A.GaussNoise(p=0.5),
-                        A.Sharpen(p=0.5),
-                    ], p=1.0),
+                        A.Blur(blur_limit=[1,3], p=0.5),
+                        A.GaussNoise(p=0.5, std_range=[0.01, 0.05]),
+                        A.Sharpen(p=0.5, alpha=(0.1, 0.3), lightness=(0.1, 0.3)),
+                    ], p=0.5),
                     # A.RandomCrop(1024, 1024),
-                ], p=0.2),
+                ], p=0.3),
                 # Fixed transdormations for all images
                 A.ToGray(p=1.0),
                 ToTensorV2(p=1.0)

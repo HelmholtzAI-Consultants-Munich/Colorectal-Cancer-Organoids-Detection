@@ -7,7 +7,9 @@ test_dataset_path: dataset/test
 n_trails: 20
 n_epochs: 150
 patience: 25
+n_gpus: 1
 batch_size:
+  - 2
   - 4
   - 8
   - 16

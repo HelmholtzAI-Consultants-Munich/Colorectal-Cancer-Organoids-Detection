@@ -7,6 +7,7 @@ test_dataset_path: dataset/test
 n_trails: 30
 n_epochs: 5
 patience: 10
+n_gpus: 1
 batch_size:
   - 4
   - 8
@@ -24,7 +25,7 @@ data_augmentation:
 
 ### Model ###
 model_name: mask_rcnn
-model_dir: model/fine_tune
+model_dir: model/example
 
 ### Neptune ###
 neptune_workspace: francesco-campi
