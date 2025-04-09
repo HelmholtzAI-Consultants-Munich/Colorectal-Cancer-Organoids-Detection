@@ -76,9 +76,8 @@ def main():
     shutil.copytree(os.path.join(args.dataset, IMAGES_SUBFOLDER), os.path.join(args.output, IMAGES_SUBFOLDER))
 
     # extract the paths of the images and the predictions in the dataset
-    images_paths = get_images_paths(args.dataset)
 
-    inference_ds = InferenceMaskRCNNDataset(images_paths)
+    inference_ds = InferenceMaskRCNNDataset(dataset_path=args.dataset)
 
     # load the model
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
