@@ -45,12 +45,11 @@ def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Mod
     mask_features = model.roi_heads.mask_head(mask_features)
     mask_logits = model.roi_heads.mask_predictor(mask_features)
     labels = [torch.ones(len(bboxes), device=device, dtype=torch.int64)]
-    masks_probs = maskrcnn_inference(mask_logits, labels)
-
+    masks_probs = maskrcnn_inference(mask_logits, labels)[0]
     # detections, _ = model.roi_heads(features, [proposals], image_norm.image_sizes)
     detections = [{
         "boxes": bboxes,
-        "masks": masks_probs[0],
+        "masks": masks_probs,
         "scores": torch.ones(len(bboxes)),
         "labels": labels,
     }]
@@ -83,7 +82,7 @@ def main():
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = maskRCNNModel()
     model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
-    checkpoint = torch.load(model_weights_path, map_location=device)
+    checkpoint = torch.load(model_weights_path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
 
@@ -92,9 +91,13 @@ def main():
         annotations_rel_path = image_to_annotations_path(os.path.relpath(meta["path"], images_dir), BBOXES_SUFF)
         annotations_path = os.path.join(annotations_dir, annotations_rel_path)
         annotations = pd.read_csv(annotations_path, sep=',', index_col=0)
+        # print(meta["path"])
+        # print(annotations)
         bboxes = annotations[['x1', 'y1', 'x2', 'y2']]
         masks = predict_masks(image, bboxes, model, (meta["height"], meta["width"]), device)
         mask_rles = [run_length_encode(mask) for mask in masks]
+        if len(mask_rles) != len(annotations):
+            print(f"Number of masks ({len(mask_rles)}) does not match the number of annotations ({len(annotations)})")
         annotations["mask"] = mask_rles
         annotation_output_path = os.path.join(args.output, ANNOTATIONS_SUBFOLDER, annotations_rel_path)
         os.makedirs( os.path.dirname(annotation_output_path), exist_ok=True)

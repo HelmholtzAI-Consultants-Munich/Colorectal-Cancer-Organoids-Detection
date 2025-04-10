@@ -41,10 +41,6 @@ def main():
         os.path.join(config["model_dir"], "best_model.pth")
     )
 
-
-
-
-    
     pass
 
 if __name__ == '__main__':

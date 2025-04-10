@@ -156,7 +156,7 @@ class InferenceMaskRCNNDataset(MaskRCNNDataset):
         """
 
         check_inference_dataset(dataset_path)
-        self.images_paths = get_images_paths(dataset_path)
+        self.images_paths = get_images_paths_generic(dataset_path)
         self.transforms = self._get_base_transforms()
 
 

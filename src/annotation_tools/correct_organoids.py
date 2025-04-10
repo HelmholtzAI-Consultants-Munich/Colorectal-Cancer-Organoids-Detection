@@ -87,6 +87,7 @@ def main():
             os.makedirs(os.path.dirname(bboxs_path), exist_ok=True)
             # write the bounding boxes
             bboxes = bbox_napari_to_xyxy(napari_bboxes=napari_bboxes)
+            bboxes = clip_xyxy_to_image(bboxes=bboxes, image_shape=image.shape)
             bboxes["color"] = colors_hex
             
             bboxes.to_csv(bboxs_path)
