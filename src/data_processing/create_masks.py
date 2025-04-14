@@ -15,18 +15,17 @@ from src.model.model import maskRCNNModel
 from src.model.dataset import InferenceMaskRCNNDataset
 
 
-def reshape_bboxes(bboxes: pd.DataFrame, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
+def reshape_bboxes(bboxes: torch.Tensor, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
     # size of the image are in the format (height, width)
-    tensor = torch.tensor(bboxes.values, dtype=torch.float32)
-    if tensor.shape[1] == 1:
-        tensor = tensor.T
+    if bboxes.shape[1] == 1:
+        bboxes = bboxes.T
     x_reshape = new_size[1] / original_size[1]
     y_reshape = new_size[0] / original_size[0]
-    tensor[:, 0] *= x_reshape
-    tensor[:, 2] *= x_reshape
-    tensor[:, 1] *= y_reshape
-    tensor[:, 3] *= y_reshape
-    return tensor
+    bboxes[:, 0] *= x_reshape
+    bboxes[:, 2] *= x_reshape
+    bboxes[:, 1] *= y_reshape
+    bboxes[:, 3] *= y_reshape
+    return bboxes
 
 def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Module, image_size: Tuple[int], device) -> np.ndarray:
     
@@ -54,7 +53,7 @@ def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Mod
         "labels": labels,
     }]
     detections = model.transform.postprocess(detections, image_norm.image_sizes, [image_size])
-    return detections[0]["masks"].squeeze(1).detach().cpu()
+    return detections[0]["masks"].detach().cpu()
     
 def main():
 
@@ -88,13 +87,18 @@ def main():
 
     # 1. Predict the masks
     for image, meta in tqdm(inference_ds):
+        print(image.shape)
+        print(f"Processing {meta['path']}")
         annotations_rel_path = image_to_annotations_path(os.path.relpath(meta["path"], images_dir), BBOXES_SUFF)
         annotations_path = os.path.join(annotations_dir, annotations_rel_path)
         annotations = pd.read_csv(annotations_path, sep=',', index_col=0)
         # print(meta["path"])
         # print(annotations)
         bboxes = annotations[['x1', 'y1', 'x2', 'y2']]
+        bboxes = torch.tensor(annotations[['x1', 'y1', 'x2', 'y2']].to_numpy(dtype=np.float32), dtype=torch.float32)
         masks = predict_masks(image, bboxes, model, (meta["height"], meta["width"]), device)
+        print(masks.shape)
+        masks = fill_empty_masks(masks, bboxes)
         mask_rles = [run_length_encode(mask) for mask in masks]
         if len(mask_rles) != len(annotations):
             print(f"Number of masks ({len(mask_rles)}) does not match the number of annotations ({len(annotations)})")

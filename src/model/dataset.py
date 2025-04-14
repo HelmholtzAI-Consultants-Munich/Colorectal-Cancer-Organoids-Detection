@@ -68,6 +68,7 @@ class MaskRCNNDataset(Dataset):
         boxes = torch.tensor(augmented['bboxes'])
         labels = torch.tensor(augmented['labels'], dtype=torch.int64)
         masks = torch.stack(augmented['masks'], dim=0)
+        masks = masks.unsqueeze(1) # add the channel dimension
         if targets_df.empty:
             masks = torch.empty((0, image.shape[1], image.shape[2]))
             boxes = torch.empty((0, 4))
@@ -167,8 +168,8 @@ class InferenceMaskRCNNDataset(MaskRCNNDataset):
         image_path = self.images_paths[index]
         image = self.load_image(image_path)
         image = self.transforms(image=image)['image']
-        meta = {"height": image.shape[1], "width": image.shape[2], "path": image_path}
-        return image, meta
+        metadata = {"height": image.shape[1], "width": image.shape[2], "path": image_path}
+        return image, metadata
     
     def _get_base_transforms(self):
         return A.Compose(

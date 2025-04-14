@@ -47,6 +47,7 @@ class FitterMaskRCNN():
         # compute the original mAP
         val_metric = self.evaluate_one_epoch(model, val_loader)
         print(f"Original model: Validation mAP: {val_metric['map']}")
+        run["original_val_map"] = val_metric["map"]
         
         # Iterate through epochs
         patience = 0
@@ -147,6 +148,7 @@ class FitterMaskRCNN():
             targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
             # Forward pass
             prediction = model(images)
+            prediction = [{k: v.detach().cpu() for k, v in p.items()} for p in prediction]
             map.update(prediction, targets)
             # Filter predictions
             predictions.extend(self.filter_predicitons(prediction, confidence_threshold))
@@ -162,12 +164,13 @@ class FitterMaskRCNN():
         for images, _ in tqdm(loader):
             images = [image.to(self.device) for image in images]
             temp_predictions = model(images)
+            temp_predictions = [{k: v.detach().cpu() for k, v in p.items()} for p in temp_predictions]
             predictions.extend(self.filter_predicitons(temp_predictions, confidence_threshold))
             del images
         return predictions
     
-
-    def filter_predicitons(self, predictions, confidence_threshold):
+    @staticmethod
+    def filter_predicitons(predictions, confidence_threshold):
         filtered_predictions = []
         for prediciton in predictions:
             boxes = prediciton["boxes"]

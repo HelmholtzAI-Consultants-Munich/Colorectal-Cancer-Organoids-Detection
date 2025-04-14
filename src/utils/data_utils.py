@@ -16,8 +16,6 @@ def run_length_encode(mask: torch.Tensor) -> List[int]:
     """
     # make the mask binary
     mask = (mask > 0.1).type(torch.uint8).flatten()
-    if mask.sum() < 1:
-        print("Mask is empty: ", mask.sum())
     # find the positions where the mask changes value
     changes = torch.diff(mask, prepend=mask[0].unsqueeze(0))
     # find the run lengths
@@ -27,7 +25,7 @@ def run_length_encode(mask: torch.Tensor) -> List[int]:
     return " ".join([str(i.item()) for i in run_lengths])
 
 
-def run_length_decode(rle: List[int], shape: Tuple[int, int]) -> torch.tensor:
+def run_length_decode(rle: List[int], shape: Tuple[int, int]) -> np.array:
     """Convert RLE to a mask.
     
     Args:
@@ -68,7 +66,7 @@ def masks_to_area(masks: List[torch.Tensor]) -> float:
 def mask_to_contour(mask: torch.Tensor) -> torch.Tensor:
     """Convert a mask to a contour.
     """
-    if len(mask.shape) == 3 and mask.shape[0] == 1:
+    if mask.ndim == 3 and mask.shape[0] == 1:
         mask = mask.squeeze(0)
     mask = mask.cpu().numpy()
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -91,7 +89,27 @@ def mask_to_eccentricity(masks: List[torch.Tensor]) -> float:
     """
     contour = mask_to_contour(masks)    
     contour = np.array(contour).astype(np.int32)
+    if len(contour) == 0:
+        return 0.
     ellipse = cv2.fitEllipse(contour)
     longax, shortax = max(ellipse[1]), min(ellipse[1])
     ecc = np.sqrt(1 - (shortax ** 2 / longax ** 2))
     return ecc
+
+def fill_empty_masks(masks: torch.Tensor, bboxes: torch.Tensor) -> np.ndarray:
+    # fill the empty masks with the bounding boxes
+    if len(masks) == 0:
+        return masks
+    for i, (mask, box) in enumerate(zip(masks, bboxes)):
+        if mask.sum() < 5:
+            print(f"mask {i} is empty")
+            x1, y1, x2, y2 = box
+            # draw an ellipse in the mask
+            mask = np.zeros((mask.shape[1], mask.shape[2]), dtype=np.uint8)
+            mask = cv2.ellipse(mask, (int((x1+x2)/2), int((y1+y2)/2)), (int((x2-x1)/2), int((y2-y1)/2)), 0, 0, 360, 1, -1)
+            # mask = cv2.GaussianBlur(mask, (5, 5), 0)
+            # mask = cv2.dilate(mask, np.ones((5, 5), np.uint8), iterations=1)
+            mask = torch.tensor(mask, dtype=torch.uint8)
+            mask = mask.unsqueeze(0)
+            masks[i] = mask
+    return masks

@@ -16,29 +16,12 @@ class Objective:
     
         # Initialize the dataset
         self.collate_fn = lambda x: tuple(zip(*x))
-        if torch.cuda.is_available():
-            self.gpus = {i: True for i in range(self.config["n_gpus"])}
-        self.n_gpus = self.config["n_gpus"]
 
 
     def __call__(self, trial: Trial):
 
-        # choose the GPU if available
-        if torch.cuda.is_available():
-            if trial.number < self.n_gpus:
-                device = f"cuda:{trial.number}"
-                device_id = trial.number
-            else:
-                # Choose a GPU with no job running
-                for i in range(self.n_gpus):
-                    if self.gpus[i]:
-                        device = f"cuda:{i}"
-                        device_id = i
-                        break
-            self.gpus[device_id] = False
-        else:
-            device = "cpu"
-            device_id = None             
+        # Get the device
+        device = "cuda" if torch.cuda.is_available() else "cpu"          
         
         fitter = FitterMaskRCNN(id=trial.number, device=device)
         # Generate the hyperparameters
