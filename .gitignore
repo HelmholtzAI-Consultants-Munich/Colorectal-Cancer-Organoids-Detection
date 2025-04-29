@@ -7,4 +7,4 @@ best-checkpoint-114epoch.bin
 .neptune
 .DS_Store
 perun_results
-model/fine-fune
+model/fine_tune
