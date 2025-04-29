@@ -79,9 +79,5 @@ class Objective:
             val_mpa = 0.0
             print("Error", e)
 
-        # Free the GPU
-        if torch.cuda.is_available():
-            self.gpus[device_id] = True
-
         # return the validation metric
         return val_mpa
