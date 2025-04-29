@@ -1,0 +1,8 @@
+dataset: dataset/test
+# model_weights: model/best-checkpoint-114epoch.bin 
+# output_dir: inference_original 
+model_weights: model/best-checkpoint-fine-tune.bin
+output_dir: inference_fine_tune
+# model_weights: model/best-checkpoint-7.bin
+# output_dir: inference_fine_tune_aug
+confidence_threshold: 0.9

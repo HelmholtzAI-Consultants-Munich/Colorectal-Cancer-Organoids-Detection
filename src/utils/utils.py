@@ -11,9 +11,8 @@ def get_images_paths(dataset_path) -> List[str]:
     :return: list of paths to the images
     :rtype: List[str]
     """
-    ext = ['tif', 'png', 'jpg']
+    ext = ['tif', 'tiff']
     images_paths = []
-    predictions_paths = []
     for root, _, files in os.walk(top=os.path.join(dataset_path, IMAGES_SUBFOLDER)):
         for file in files:
             if file.split('.')[-1] in ext and file[0]!='.':
@@ -39,6 +38,26 @@ def get_annotations_paths(images_paths: List[str], dataset_path: str) -> List[st
         assert os.path.exists(annotations_path), f"The annotations file {annotations_path} does not exist."
         annotations_paths.append(annotations_path)
     return annotations_paths
+
+
+def get_images_paths_generic(dataset_path: str):
+    """Return path to the images contained in a generic dataset, without a predefined structure.
+
+    :param dataset_path: path to the dataset
+    :type dataset_path: str
+    :return: list of paths to the images
+    :rtype: List[str]
+    """
+    ext = ['tif', 'png', 'jpg', 'tiff', 'jpeg']
+    images_paths = []
+    for root, _, files in os.walk(dataset_path):
+        for file in files:
+            if file.split('.')[-1] in ext and file[0]!='.':
+                file_path = os.path.join(root, file)
+                images_paths.append(file_path)
+    return images_paths
+
+
 
 
 def check_dataset(dataset_path):
@@ -67,6 +86,14 @@ def check_dataset(dataset_path):
         annotations_rel_path = image_to_annotations_path(image_rel_path)
         assert annotations_rel_path in annotations_rel_paths, f"The annotations file {annotations_rel_path} does not exist."
     # Since annotations and images have the same number of elements, we don't have to check the correspondence in the other direction
+    return True
+
+def check_inference_dataset(dataset_path):
+    # Check if the dataset path exists
+    assert os.path.exists(dataset_path), f"The dataset path {dataset_path} does not exist."
+    # Check if the images folder exists
+    images_paths = get_images_paths_generic(dataset_path)
+    assert len(images_paths) > 0, f"The images folder is empty."
     return True
 
 def image_to_annotations_path(image_path: str, suffix: str = BBOXES_SUFF):

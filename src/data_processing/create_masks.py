@@ -15,18 +15,17 @@ from src.model.model import maskRCNNModel
 from src.model.dataset import InferenceMaskRCNNDataset
 
 
-def reshape_bboxes(bboxes: pd.DataFrame, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
+def reshape_bboxes(bboxes: torch.Tensor, original_size: Tuple[int], new_size: Tuple[int]) -> torch.tensor:
     # size of the image are in the format (height, width)
-    tensor = torch.tensor(bboxes.values, dtype=torch.float32)
-    if tensor.shape[1] == 1:
-        tensor = tensor.T
+    if bboxes.shape[1] == 1:
+        bboxes = bboxes.T
     x_reshape = new_size[1] / original_size[1]
     y_reshape = new_size[0] / original_size[0]
-    tensor[:, 0] *= x_reshape
-    tensor[:, 2] *= x_reshape
-    tensor[:, 1] *= y_reshape
-    tensor[:, 3] *= y_reshape
-    return tensor
+    bboxes[:, 0] *= x_reshape
+    bboxes[:, 2] *= x_reshape
+    bboxes[:, 1] *= y_reshape
+    bboxes[:, 3] *= y_reshape
+    return bboxes
 
 def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Module, image_size: Tuple[int], device) -> np.ndarray:
     
@@ -45,18 +44,16 @@ def predict_masks(image: torch.tensor, bboxes: pd.DataFrame, model: torch.nn.Mod
     mask_features = model.roi_heads.mask_head(mask_features)
     mask_logits = model.roi_heads.mask_predictor(mask_features)
     labels = [torch.ones(len(bboxes), device=device, dtype=torch.int64)]
-    masks_probs = maskrcnn_inference(mask_logits, labels)
-
+    masks_probs = maskrcnn_inference(mask_logits, labels)[0]
     # detections, _ = model.roi_heads(features, [proposals], image_norm.image_sizes)
     detections = [{
         "boxes": bboxes,
-        "masks": masks_probs[0],
+        "masks": masks_probs,
         "scores": torch.ones(len(bboxes)),
         "labels": labels,
     }]
-    print(image_size)
-    detections = model.transform.postprocess(detections, image_norm.image_sizes, [image_size[::-1]])
-    return detections[0]["masks"].squeeze(1).detach().cpu()
+    detections = model.transform.postprocess(detections, image_norm.image_sizes, [image_size])
+    return detections[0]["masks"].detach().cpu()
     
 def main():
 
@@ -77,26 +74,34 @@ def main():
     shutil.copytree(os.path.join(args.dataset, IMAGES_SUBFOLDER), os.path.join(args.output, IMAGES_SUBFOLDER))
 
     # extract the paths of the images and the predictions in the dataset
-    images_paths = get_images_paths(args.dataset)
 
-    inference_ds = InferenceMaskRCNNDataset(images_paths)
+    inference_ds = InferenceMaskRCNNDataset(dataset_path=args.dataset)
 
     # load the model
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
     model = maskRCNNModel()
     model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
-    checkpoint = torch.load(model_weights_path, map_location=device)
+    checkpoint = torch.load(model_weights_path, map_location=device, weights_only=False)
     model.load_state_dict(checkpoint['model_state_dict'])
     model.eval()
 
     # 1. Predict the masks
     for image, meta in tqdm(inference_ds):
+        print(image.shape)
+        print(f"Processing {meta['path']}")
         annotations_rel_path = image_to_annotations_path(os.path.relpath(meta["path"], images_dir), BBOXES_SUFF)
         annotations_path = os.path.join(annotations_dir, annotations_rel_path)
         annotations = pd.read_csv(annotations_path, sep=',', index_col=0)
+        # print(meta["path"])
+        # print(annotations)
         bboxes = annotations[['x1', 'y1', 'x2', 'y2']]
+        bboxes = torch.tensor(annotations[['x1', 'y1', 'x2', 'y2']].to_numpy(dtype=np.float32), dtype=torch.float32)
         masks = predict_masks(image, bboxes, model, (meta["height"], meta["width"]), device)
+        print(masks.shape)
+        masks = fill_empty_masks(masks, bboxes)
         mask_rles = [run_length_encode(mask) for mask in masks]
+        if len(mask_rles) != len(annotations):
+            print(f"Number of masks ({len(mask_rles)}) does not match the number of annotations ({len(annotations)})")
         annotations["mask"] = mask_rles
         annotation_output_path = os.path.join(args.output, ANNOTATIONS_SUBFOLDER, annotations_rel_path)
         os.makedirs( os.path.dirname(annotation_output_path), exist_ok=True)

@@ -1,7 +1,13 @@
 __pycache__/
-*.py[cod]
 venv/
 *.egg-info/
 dataset
 best-checkpoint-114epoch.bin
 .DS_Store
+.neptune
+.DS_Store
+perun_results
+model/fine_tune
+predicitons
+dataset_cluster
+CTG_readout

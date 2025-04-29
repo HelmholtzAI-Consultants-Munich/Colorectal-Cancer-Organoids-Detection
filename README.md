@@ -1,5 +1,10 @@
 # Colorectal Cancer Organoids Detection
 
+
+<p align="center">
+  <img src="docs/annotation_tool.png" width="600" >
+</p>
+
 This repository is a Napari based tool that allows to annotate organoids in brightfield microscopy images with bounding boxes. To make the annotation process fastest we implemented an AI-assisted labelling system which uses the predictions of [GOAT](https://github.com/msknorr/goat-public) as a baseline, lets the annotator correct them as needed, and stores the corrected annotations.
 The program requires in input only the path to the dataset folder containing the images to annotate. This dataset is required to have a specific structure: the images need to be stored in a subfolder named `images`, while the annotations will be stored in a separate subfolder named `annotations`. The images can be stored in a structured manner separating for example images coming form different patients and/or different treatments, this structured will be automatically replicated in the `annotations` folder.
 
@@ -92,11 +97,11 @@ Given a dataset of microscopy images, these tools allow to annotate them with th
 
 ### Merging Multiple Annotations
 
-If two different annotators independently annotated the same dataset it is possible to merge the two annotations. The tool uses the Hungarian algorithm to match boxes form the two annotators that have maximal intersection over Union (IoU) score nad merges the "matching" boxes by averaging the edges. In addition, it is possible to set a minimum threshold for the IoU score below which two boxes are not matched by the algorithm (```-iou``` parameter). Finally, the user can decide whether to include or to discard the unmatched bounding boxes in the final annotation (```--keep``` or ```--drop``` flags).
+If two different annotators independently annotated the same dataset it is possible to merge the two annotations. The tool uses the Hungarian algorithm to match boxes form the two annotators that have maximal intersection over Union (IoU) score nad merges the "matching" boxes by averaging the edges. In addition, it is possible to set a minimum threshold for the IoU score below which two boxes are not matched by the algorithm (```-iou``` parameter, defailt value is 0.5). Finally, the user can decide whether to include or to discard the unmatched bounding boxes in the final annotation with ```--keep``` or ```--drop``` flags (default ```--keep```).
 
 To run the tool write one of the following command in the terminal depending if you want to keep or discard unmatched boxes, and replace the dataset paths and the iou threshold with the desired ones:
-- **keep** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path -iou=  --keep```
-- **discard** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path -iou=  --drop```
+- **keep** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path --keep```
+- **discard** the unmatched boxes: ```merge_annotations -d1 annotator_1_dataset_path -d2 annotator_1_dataset_path -o output_dataset_path  --drop```
 
 **Remark**: this tool does not support fibroblasts annotations
 
@@ -113,6 +118,13 @@ correct_organoids -d dataset_path
 As described above for the annotation tool the same keyboard shortcuts are unavailable, and to review the previously annotated images just add the ```-r``` flag to the terminal command.
 
 **Remark**: this tool does not support fibroblasts annotations
+
+### Genrate Masks
+
+From the annotated bounding boxes, we can use the instannce segmentation model to generate the segmantion masks for each detection in the annotation.  
+
+```shell
+create_masks -d dataset_path -o dataset/output_dataset_path```
 
 ## Contributing
 

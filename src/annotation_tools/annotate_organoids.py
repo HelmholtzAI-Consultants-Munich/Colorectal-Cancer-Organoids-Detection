@@ -27,10 +27,10 @@ def main():
     assert os.path.exists(args.dataset), "The dataset path does not exist."
     images = os.path.join(args.dataset, IMAGES_SUBFOLDER)
     assert os.path.exists(images), "The dataset path does not contain an images subfolder."
-    model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
+    model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-fine-tune.bin")
     if not os.path.exists(model_weights_path):
         gdown.download(
-            id="1AcrYCBR5-kg91C61boj221t1X_SVX8Hv",  
+            id="1ipm8sPnGYfoTwrBgT0BE-cmFfdAQTVCK",  
             output=model_weights_path,
         )
 
@@ -120,6 +120,8 @@ def main():
             os.makedirs(os.path.dirname(bboxs_path), exist_ok=True)
             # write the bounding boxes
             bboxes = bbox_napari_to_xyxy(napari_bboxes=napari_bboxes)
+            bboxes = clip_xyxy_to_image(bboxes=bboxes, image_shape=image.shape)
+            #TODO: add the masks
             bboxes["color"] = colors_hex
             bboxes.to_csv(bboxs_path)
             if args.annotate:
