@@ -8,4 +8,4 @@ best-checkpoint-114epoch.bin
 notebooks
 .DS_Store
 perun_results
-model/fine_fune
+model/fine_tune

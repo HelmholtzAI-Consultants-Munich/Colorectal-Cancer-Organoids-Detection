@@ -4,19 +4,17 @@ val_dataset_path: dataset/val
 test_dataset_path: dataset/test
 
 ### Optimizer ###
-n_trails: 20
+n_trails: 40
 n_epochs: 150
 patience: 25
 n_gpus: 1
 batch_size:
-  - 2
-  - 4
   - 8
   - 16
   - 32
 learning_rate:
   min: 0.00001
-  max: 0.01
+  max: 0.001
 freeze_weights:
   - True
   - False
@@ -29,6 +27,6 @@ model_dir: model/fine_tune
 
 ### Neptune ###
 neptune_workspace: francesco-campi
-neptune_project: DKFZ-Organoid-Detection
+neptune_project: DKFZ-Organoid-Detection-aug
 
 
