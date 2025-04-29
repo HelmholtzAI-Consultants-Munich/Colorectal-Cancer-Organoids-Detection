@@ -63,6 +63,23 @@ def masks_to_area(masks: List[torch.Tensor]) -> float:
         area += mask.sum().item()
     return area
 
+def masks_to_volume(mask: torch.Tensor) -> float:
+    """Calculate the volume of the mask.
+    
+    Args:
+        mask (torch.Tensor): binary mask
+        
+    Returns:
+        float: volume of the mask
+    """
+    area = masks_to_area(mask)
+    _, _ , ax = mask_to_eccentricity(mask)
+    
+    if ax is  None:
+        ax = (area/3.14)**0.5
+    volume = 4/3*ax*area
+    return volume
+
 def mask_to_contour(mask: torch.Tensor) -> torch.Tensor:
     """Convert a mask to a contour.
     """
@@ -78,7 +95,7 @@ def mask_to_contour(mask: torch.Tensor) -> torch.Tensor:
     contour = max(contours, key=cv2.contourArea)
     return contour
 
-def mask_to_eccentricity(masks: List[torch.Tensor]) -> float:
+def mask_to_eccentricity(masks: List[torch.Tensor]) -> Tuple[float, float, float]:
     """Calculate the eccentricity of the masks.
     
     Args:
@@ -89,12 +106,12 @@ def mask_to_eccentricity(masks: List[torch.Tensor]) -> float:
     """
     contour = mask_to_contour(masks)    
     contour = np.array(contour).astype(np.int32)
-    if len(contour) == 0:
-        return 0.
+    if len(contour) <= 5:
+        return None, None, None
     ellipse = cv2.fitEllipse(contour)
     longax, shortax = max(ellipse[1]), min(ellipse[1])
     ecc = np.sqrt(1 - (shortax ** 2 / longax ** 2))
-    return ecc
+    return ecc, longax, shortax
 
 def fill_empty_masks(masks: torch.Tensor, bboxes: torch.Tensor) -> np.ndarray:
     # fill the empty masks with the bounding boxes
@@ -102,7 +119,6 @@ def fill_empty_masks(masks: torch.Tensor, bboxes: torch.Tensor) -> np.ndarray:
         return masks
     for i, (mask, box) in enumerate(zip(masks, bboxes)):
         if mask.sum() < 5:
-            print(f"mask {i} is empty")
             x1, y1, x2, y2 = box
             # draw an ellipse in the mask
             mask = np.zeros((mask.shape[1], mask.shape[2]), dtype=np.uint8)

@@ -11,7 +11,7 @@ def get_images_paths(dataset_path) -> List[str]:
     :return: list of paths to the images
     :rtype: List[str]
     """
-    ext = ['tif', 'png', 'jpg', 'tiff', 'jpeg']
+    ext = ['tif', 'tiff']
     images_paths = []
     for root, _, files in os.walk(top=os.path.join(dataset_path, IMAGES_SUBFOLDER)):
         for file in files:

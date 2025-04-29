@@ -5,7 +5,7 @@ test_dataset_path: dataset/test
 
 ### Optimizer ###
 n_trails: 30
-n_epochs: 5
+n_epochs: 2
 patience: 10
 n_gpus: 1
 batch_size:

@@ -119,6 +119,13 @@ As described above for the annotation tool the same keyboard shortcuts are unava
 
 **Remark**: this tool does not support fibroblasts annotations
 
+### Genrate Masks
+
+From the annotated bounding boxes, we can use the instannce segmentation model to generate the segmantion masks for each detection in the annotation.  
+
+```shell
+create_masks -d dataset_path -o dataset/output_dataset_path```
+
 ## Contributing
 
 Contributions are welcome! Please follow these steps:
