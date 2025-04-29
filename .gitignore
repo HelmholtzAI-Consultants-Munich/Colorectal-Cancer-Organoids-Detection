@@ -8,3 +8,6 @@ best-checkpoint-114epoch.bin
 .DS_Store
 perun_results
 model/fine_tune
+predicitons
+dataset_cluster
+CTG_readout
