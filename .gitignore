@@ -7,7 +7,7 @@ best-checkpoint-114epoch.bin
 .neptune
 .DS_Store
 perun_results
-model/fine_tune
+weights
 predicitons
 dataset_cluster
 CTG_readout

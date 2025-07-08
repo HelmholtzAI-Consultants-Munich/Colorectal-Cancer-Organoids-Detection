@@ -1,8 +1,8 @@
 dataset: dataset/test
-# model_weights: model/best-checkpoint-114epoch.bin 
-# output_dir: inference_original 
-model_weights: model/best-checkpoint-fine-tune.bin
-output_dir: inference_fine_tune
-# model_weights: model/best-checkpoint-7.bin
-# output_dir: inference_fine_tune_aug
+model_weights: weights/best-checkpoint-114epoch.bin 
+output_dir: inference/original 
+# model_weights: weights/best-checkpoint-fine-tune-aug.bin
+# output_dir: inference/fine_tune_aug
+model_weights: weights/best-checkpoint-fine-tune-no-aug.bin
+output_dir: inference/fine_tune_no_aug
 confidence_threshold: 0.9

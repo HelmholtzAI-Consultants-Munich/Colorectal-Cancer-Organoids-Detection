@@ -23,7 +23,7 @@ class Objective:
         # Get the device
         device = "cuda" if torch.cuda.is_available() else "cpu"          
         
-        fitter = FitterMaskRCNN(id=trial.number, device=device)
+        fitter = FitterMaskRCNN(device=device)
         # Generate the hyperparameters
         hyperparams = {}
         hyperparams["batch_size"] = trial.suggest_categorical(
@@ -65,6 +65,7 @@ class Objective:
         # Train the model
         try:
             val_mpa = fitter.fit( 
+                trial.number,
                 train_loader, 
                 val_loader, 
                 hyperparams,
