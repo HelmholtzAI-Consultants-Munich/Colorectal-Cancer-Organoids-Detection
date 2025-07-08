@@ -39,3 +39,4 @@ def maskRCNNModelFreeze() -> MaskRCNN:
     for param in model.roi_heads.mask_head.parameters():
         param.requires_grad = False
     return model
+

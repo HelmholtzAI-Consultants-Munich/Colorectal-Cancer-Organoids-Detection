@@ -16,18 +16,18 @@ from tqdm import tqdm
 import gc
 
 from src.model.model import maskRCNNModel, maskRCNNModelFreeze
+from src.utils.utils import load_pretrained_weights
 
 class FitterMaskRCNN():
 
-    def __init__(self, id: str, device: str = None):
+    def __init__(self, device: str = None):
         # Set the device between GPU, MPS, or CPU
         if device is not None:
             self.device = torch.device(device)
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.id = id
 
-    def fit(self, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
+    def fit(self, id: str, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
         # Initialize the model
         model = self.initialize_model(hyperparams["freeze_weights"])
         # Initialize optimizer and scheduler
@@ -41,8 +41,8 @@ class FitterMaskRCNN():
         )
         run.assign({"hyperparameters": hyperparams})
         run["job_id"] = os.path.split(model_dir)[-1]
-        run["local_id"] = self.id
-        print(f"Starting training {self.id} on device {self.device}")
+        run["local_id"] = id
+        print(f"Starting training {id} on device {self.device}")
 
         # compute the original mAP
         val_metric = self.evaluate_one_epoch(model, val_loader)
@@ -56,11 +56,11 @@ class FitterMaskRCNN():
         best_checkpoint = deepcopy(model.state_dict())
         for epoch in range(hyperparams["n_epochs"]):
             # Train one epoch
-            print(f"Trial {self.id}, epoch {epoch}")
+            print(f"Trial {id}, epoch {epoch}")
             losses = self.train_one_epoch(model, train_loader, optimizer, accumulation_steps=hyperparams["accumulation_steps"])
             self.log_metric(losses, "training_losses", run)
             # Validate
-            # print(f"Trial {self.id}, epoch {epoch}: Validation")
+            # print(f"Trial {id}, epoch {epoch}: Validation")
             train_metric = self.evaluate_one_epoch(model, train_loader)
             self.log_metric(train_metric, "training_metrics", run)
             val_metric = self.evaluate_one_epoch(model, val_loader)
@@ -81,7 +81,7 @@ class FitterMaskRCNN():
             # print(f"Epoch {epoch}: Validation mAP: {val_metric['map']} (best mAP: {best_map} at epoch {best_epoch})")
         run["best_val_map"] = best_map
         run.stop()
-        path = os.path.join(model_dir, f"best-checkpoint-{self.id}.bin")
+        path = os.path.join(model_dir, f"best-checkpoint-{id}.bin")
         self.save(best_checkpoint, path)
         del model, optimizer, scheduler, best_checkpoint
         torch.cuda.empty_cache()
@@ -169,6 +169,17 @@ class FitterMaskRCNN():
             del images
         return predictions
     
+    @torch.no_grad()
+    def predict_image(self, model, image, confidence_threshold=0.5):
+        model.eval()
+        # Forward pass
+        image = [image.to(self.device)]
+        prediction = model(image)
+        prediction = [{k: v.detach().cpu() for k, v in p.items()} for p in prediction]
+        # Filter predictions
+        filtered_predictions = self.filter_predicitons(prediction, confidence_threshold)[0]
+        return filtered_predictions
+    
     @staticmethod
     def filter_predicitons(predictions, confidence_threshold):
         filtered_predictions = []
@@ -186,6 +197,8 @@ class FitterMaskRCNN():
             masks = (masks > 0.5).type(torch.uint8)
             filtered_predictions.append({"boxes": boxes, "labels": labels, "scores": scores,"masks": masks})
         return filtered_predictions
+    
+
 
     def save(self, best_checkpoint, path):
         # save the model
@@ -193,17 +206,12 @@ class FitterMaskRCNN():
 
     def initialize_model(self, freeze_weights) -> nn.Module:
         #model
-        model_initial_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "model", "best-checkpoint-114epoch.bin")
-        if not os.path.exists(model_initial_weights_path):
-            gdown.download(
-                id="1AcrYCBR5-kg91C61boj221t1X_SVX8Hv",  
-                output=model_initial_weights_path,
-            )
         if freeze_weights:
             model = maskRCNNModelFreeze()
         else:
             model = maskRCNNModel() # TODO: Freeze the weights if we want to train under these conditions
-        model.load_state_dict(torch.load(model_initial_weights_path, map_location=self.device, weights_only=False)['model_state_dict'])
+        model_weights = load_pretrained_weights(self.device)
+        model.load_state_dict(model_weights)
         model.to(self.device)
         return model
     

@@ -4,6 +4,7 @@ ANNOTATIONS_SUBFOLDER = "annotations"
 ANNOTATE_IMAGES_FILE_ORG = ".annotated_images_organoids.txt"
 CORRECTED_IMAGES_FILE_ORG = ".corrected_images_organoids.txt"
 ANNOTATE_IMAGES_FILE_FIB = ".annotated_images_fibroblasts.txt"
+PREDICTION_ERROR_FILE_ORG = ".error_images_organoids.txt"
 BBOXES_SUFF = "_box"
 POINTS_SUFF = "_point"
 CONFIDENCE_THRESHOLD = 0.9

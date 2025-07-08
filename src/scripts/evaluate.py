@@ -11,7 +11,7 @@ from src.model.dataset import MaskRCNNDataset
 from src.model.model import maskRCNNModel
 from src.model.engine import FitterMaskRCNN
 
-from src.model_training.train import get_args
+from src.scripts.train import get_args
 
 def draw_boxes(image, target, prediction, output_dir, image_id):
     # draw the predictions
@@ -75,11 +75,11 @@ def main():
 
     test_dataset = MaskRCNNDataset(config["dataset"], datatype="eval")
     collate_fn = lambda x: tuple(zip(*x))
-    test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False, collate_fn=collate_fn)
+    test_loader = DataLoader(test_dataset, batch_size=4, shuffle=False, collate_fn=collate_fn)
     model = maskRCNNModel()
     model.load_state_dict(torch.load(config["model_weights"], map_location=device, weights_only=False)['model_state_dict'])
 
-    engine = FitterMaskRCNN(0)
+    engine = FitterMaskRCNN()
     predictions, metric = engine.evaluate_one_epoch_predictions(model, test_loader, config["confidence_threshold"])
 
     os.makedirs(config["output_dir"], exist_ok=True)

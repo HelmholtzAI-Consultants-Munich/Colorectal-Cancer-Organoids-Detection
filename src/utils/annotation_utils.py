@@ -16,7 +16,10 @@ def get_args():
     parser.add_argument('-d', '--dataset', help='Path to the folder containing the dataset.', required=True)
     parser.add_argument('-a', '--annotate', action='store_true', help='Annotate the dataset mode (Set by default).')
     parser.add_argument('-r', '--review', dest="annotate", action='store_false', help='Review the dataset mode.')
+    parser.add_argument('-pt', '--pretrained', action='store_true', help='Use a pretrained model for the annotation.')
+    parser.add_argument('-ft', '--finetuned', action='store_false', dest="pretrained", help='Use a finetuned model for the annotation.')
     parser.set_defaults(annotate=True)
+    parser.set_defaults(pretrained=True)
 
     return parser.parse_args()
 

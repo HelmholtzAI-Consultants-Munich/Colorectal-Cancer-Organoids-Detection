@@ -1,6 +1,9 @@
 import os
 from typing import List
 
+import gdown
+import torch
+
 from .const import *
 
 def get_images_paths(dataset_path) -> List[str]:
@@ -135,3 +138,37 @@ def annotations_to_image_path(annotations_path: str, suffix: str = BBOXES_SUFF):
     # Get the path to the image file
     image_path = os.path.join(os.path.dirname(annotations_path), image_name)
     return image_path
+
+def load_pretrained_weights(device: str):
+    """Load the pretrained weights of GOAT, and downloas them in case they are not locally available.
+
+    :param device: cuda device
+    :type device: str
+    :return: model state dicts
+    :rtype: dict
+    """
+    model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "weights", "pretrained_model.bin")
+    if not os.path.exists(model_weights_path):
+        gdown.download(
+            id="1ipm8sPnGYfoTwrBgT0BE-cmFfdAQTVCK",  
+            output=model_weights_path,
+        )
+    checkpoint = torch.load(model_weights_path, map_location=device)
+    return checkpoint['model_state_dict']
+
+def load_finetuned_weights(device):
+    """Load the pretrained weights of GOAT, and downloas them in case they are not locally available.
+
+    :param device: cuda device
+    :type device: str
+    :return: model state dicts
+    :rtype: dict
+    """
+    model_weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "weights", "fine_tuned_model.bin")
+    if not os.path.exists(model_weights_path):
+        gdown.download(
+            id="1gizDHPguUnRoVl_MpleHSZ1BFArncQS-",  
+            output=model_weights_path,
+        )
+    checkpoint = torch.load(model_weights_path, map_location=device)
+    return checkpoint['model_state_dict']

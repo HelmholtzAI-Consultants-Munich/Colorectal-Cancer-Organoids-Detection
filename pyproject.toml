@@ -49,8 +49,8 @@ documentation = "https://example-project.readthedocs.io/"
 repository = "https://github.com/HelmholtzAI-Consultants-Munich/example-project"
 
 [project.scripts]
-annotate_organoids = "src.annotation_tools.annotate_organoids:main"
-annotate_fibroblasts = "src.annotation_tools.annotate_fibroblasts:main"
+annotate_organoids = "src.scripts.annotate_organoids:main"
+annotate_fibroblasts = "src.scripts.annotate_fibroblasts:main"
 merge_annotations = "src.data_processing.merge_annotations:main"
-correct_organoids = "src.annotation_tools.correct_organoids:main"
-create_masks = "src.data_processing.create_masks:main"
+correct_organoids = "src.scripts.correct_organoids:main"
+inferece = "src.scripts.inference:main"

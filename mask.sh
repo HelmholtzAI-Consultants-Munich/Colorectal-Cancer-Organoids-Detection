@@ -1,0 +1,10 @@
+echo "Creating masks for merge_together_corrected"
+create_masks -d dataset/merge_together_corrected -o dataset/merge_together_corrected_m
+echo "Creating masks for merge_alone_1_corrected_LT"
+create_masks -d dataset/merge_alone_1_corrected_LT -o dataset/merge_alone_1_corrected_LT_m
+echo "Creating masks for merge_alone_1_corrected_EK"
+create_masks -d dataset/merge_alone_1_corrected_EK -o dataset/merge_alone_1_corrected_EK_m
+echo "Creating masks for merge_alone_2_corrected_LT"
+create_masks -d dataset/merge_alone_2_corrected_LT -o dataset/merge_alone_2_corrected_LT_m
+echo "Creating masks for merge_alone_3_corrected_EK"
+create_masks -d dataset/merge_alone_3_corrected_EK -o dataset/merge_alone_3_corrected_EK_m
