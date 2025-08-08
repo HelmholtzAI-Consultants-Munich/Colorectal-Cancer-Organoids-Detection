@@ -30,6 +30,11 @@ def main():
     config["model_dir"] = os.path.join(config["model_dir"], str(int(time())))
     os.makedirs(config["model_dir"], exist_ok=True)
 
+    # set random seed
+    torch.manual_seed(config["seed"])
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(config["seed"])
+
     # 2. Train model: (see goat/engine.py)
     study = optuna.create_study(direction="maximize")
     study.optimize(Objective(config), n_trials=config["n_trails"], gc_after_trial=True)

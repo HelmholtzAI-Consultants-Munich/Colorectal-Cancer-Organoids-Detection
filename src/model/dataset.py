@@ -17,7 +17,7 @@ from src.utils.annotation_utils import clip_xyxy_to_image
 
 class MaskRCNNDataset(Dataset):
 
-    def __init__(self, dataset_path: str, datatype: str = "train", data_augmentation: bool = True):
+    def __init__(self, dataset_path: str, datatype: str = "train", data_augmentation: bool = True, annotator: int = None):
         """
         Dataset class for MaskRCNN model.
 
@@ -27,11 +27,14 @@ class MaskRCNNDataset(Dataset):
         :type datatype: str
         :param data_augmentation: whether to apply data augmentation
         :type data_augmentation: bool
+        :param annotator: annotator to use for the dataset, if None, all annotators are used
+        :type annotator: str or None
         """
 
         check_dataset(dataset_path)
         self.images_paths = get_images_paths(dataset_path)
         self.labels_paths = get_annotations_paths(self.images_paths, dataset_path)
+        self.annotator = annotator
 
         if datatype == "train" and data_augmentation:
             self.transforms = self._get_augmentation_transforms()
@@ -51,10 +54,13 @@ class MaskRCNNDataset(Dataset):
         targets_df = pd.read_csv(label_path, sep=',', index_col=0)
 
         # sample the annotator if we have multiple ones
-        annotator = None
         if "annotator" in targets_df.columns and not targets_df.empty:
-            annotator = random.choice(targets_df["annotator"].unique())
-            targets_df = targets_df[targets_df["annotator"] == annotator]
+            if self.annotator is not None:
+                targets_df = targets_df[targets_df["annotator"] == self.annotator]
+            else:
+                # randomly sample an annotator
+                annotator = random.choice(targets_df["annotator"].unique())
+                targets_df = targets_df[targets_df["annotator"] == annotator]
 
         # extract the bounding boxes and the masks tenors
         boxes = self.load_boxes(targets_df, image.shape[:-1])

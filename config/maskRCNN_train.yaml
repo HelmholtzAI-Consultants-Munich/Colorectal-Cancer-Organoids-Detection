@@ -2,6 +2,7 @@
 train_dataset_path: dataset/train
 val_dataset_path: dataset/val
 test_dataset_path: dataset/test
+seed: 42
 
 ### Optimizer ###
 n_trails: 40
@@ -23,7 +24,7 @@ data_augmentation:
 
 ### Model ###
 model_name: mask_rcnn
-model_dir: model/fine_tune
+model_dir: model/fine_tune_aug
 
 ### Neptune ###
 neptune_workspace: francesco-campi

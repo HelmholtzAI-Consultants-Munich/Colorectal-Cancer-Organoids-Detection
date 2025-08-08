@@ -54,8 +54,12 @@ class Objective:
             loader_batch_size = hyperparams["batch_size"]
 
         # Initialize the dataset
-        train_dataset = MaskRCNNDataset(self.config["train_dataset_path"], datatype="train", data_augmentation=hyperparams["data_augmentation"])
-        val_dataset = MaskRCNNDataset(self.config["val_dataset_path"], datatype="eval")
+        if "annotator" in self.config:
+            annotator = self.config["annotator"]
+        else:
+            annotator = None
+        train_dataset = MaskRCNNDataset(self.config["train_dataset_path"], datatype="train", data_augmentation=hyperparams["data_augmentation"], annotator=annotator)
+        val_dataset = MaskRCNNDataset(self.config["val_dataset_path"], datatype="eval", annotator=annotator)
         test_dataset = MaskRCNNDataset(self.config["test_dataset_path"], datatype="eval")
         # Initialize the dataloader 
         train_loader = DataLoader(train_dataset, batch_size=loader_batch_size, shuffle=True, collate_fn=self.collate_fn)
