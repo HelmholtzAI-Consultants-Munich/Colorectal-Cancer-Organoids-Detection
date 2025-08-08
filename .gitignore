@@ -11,3 +11,10 @@ weights
 predicitons
 dataset_cluster
 CTG_readout
+inference
+*.log
+*.tmp
+*.bak
+*.swp
+*.pyc
+inference_output
