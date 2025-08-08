@@ -2,34 +2,35 @@
 train_dataset_path: dataset/train
 val_dataset_path: dataset/val
 test_dataset_path: dataset/test
+
 seed: 42
-anotator: 1
+annotator: 1
 
 ### Optimizer ###
-n_trails: 30
-n_epochs: 2
-patience: 10
+n_trails: 80
+n_epochs: 150
+patience: 25
 n_gpus: 1
 batch_size:
-  - 4
   - 8
   - 16
   - 32
 learning_rate:
-  min: 0.00001
-  max: 0.001
+  min: 0.000005
+  max: 0.005
 freeze_weights:
   - True
   - False
 data_augmentation: 
-  - False
   - True
+  - False
 
 ### Model ###
 model_name: mask_rcnn
-model_dir: model/example
+model_dir: model/fine_tune_multirater_1
 
 ### Neptune ###
 neptune_workspace: francesco-campi
-neptune_project: DKFZ-Organoid-Detection-example
+neptune_project: DKFZ-Organoid-Detection-aug
+
 
