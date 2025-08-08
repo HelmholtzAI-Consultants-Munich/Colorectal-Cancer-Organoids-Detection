@@ -25,7 +25,7 @@ def run_length_encode(mask: torch.Tensor) -> List[int]:
     return " ".join([str(i.item()) for i in run_lengths])
 
 
-def run_length_decode(rle: List[int], shape: Tuple[int, int]) -> np.array:
+def run_length_decode(rle: str, shape: Tuple[int, int]) -> np.array:
     """Convert RLE to a mask.
     
     Args:
@@ -64,7 +64,7 @@ def masks_to_area(masks: List[torch.Tensor]) -> float:
     return area
 
 def masks_to_volume(mask: torch.Tensor) -> float:
-    """Calculate the volume of the mask.
+    """Calculate the volume of the mask. We infer that the additional axes has the same lengths as the smalles on in xy.
     
     Args:
         mask (torch.Tensor): binary mask
@@ -79,6 +79,35 @@ def masks_to_volume(mask: torch.Tensor) -> float:
         ax = (area/3.14)**0.5
     volume = 4/3*ax*area
     return volume
+
+def masks_to_volume_2(mask: torch.Tensor) -> float:
+    """Calculate the volume of the mask.
+    
+    Args:
+        mask (torch.Tensor): binary mask
+        
+    Returns:
+        float: volume of the mask
+    """
+    area = masks_to_area(mask)
+    return area**1.5
+
+def masks_to_diameter(mask: torch.Tensor) -> float:
+    """Calculate the diameter of the mask.
+    
+    Args:
+        mask (torch.Tensor): binary mask
+        
+    Returns:
+        float: diameter of the mask
+    """
+    _, longax, shortax = mask_to_eccentricity(mask)
+    if longax is None or shortax is None:
+        return 0.
+    # calculate the diameter as the average of the long and short axes
+    diameter = (longax + shortax) / 2
+    return diameter
+
 
 def mask_to_contour(mask: torch.Tensor) -> torch.Tensor:
     """Convert a mask to a contour.

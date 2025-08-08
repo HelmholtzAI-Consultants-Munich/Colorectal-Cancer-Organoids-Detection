@@ -40,7 +40,6 @@ class MasksGenerator:
 
     def predict_masks(self, image: torch.Tensor, bboxes: torch.Tensor) -> np.ndarray:
         
-        print(f"image shape: {image.shape}")
         image_size = (image.shape[1], image.shape[2])
         if len(bboxes) == 0:
             print(f"no annotations for {bboxes}")
