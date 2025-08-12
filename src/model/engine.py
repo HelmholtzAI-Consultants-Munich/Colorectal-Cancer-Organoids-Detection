@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 import time
 from copy import deepcopy
+import subprocess
+
 
 import torch
 from torch import nn, tensor
@@ -14,6 +16,10 @@ import neptune
 from neptune.management import create_project, get_project_list
 from tqdm import tqdm
 import gc
+from torch.utils.data.distributed import DistributedSampler
+from torch.nn.parallel import DistributedDataParallel as DDP
+from torch.utils.data import DataLoader
+
 
 from src.model.model import maskRCNNModel, maskRCNNModelFreeze
 from src.utils.utils import load_pretrained_weights
@@ -27,9 +33,10 @@ class FitterMaskRCNN():
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def fit(self, id: str, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
-        # Initialize the model
-        model = self.initialize_model(hyperparams["freeze_weights"])
+    def fit(self, id: str, model, train_dataset, val_dataset, hyperparams, model_dir, neptune_workspace, neptune_project):
+        # Initialize the dataloader 
+        train_loader = DataLoader(train_dataset, batch_size=hyperparams["batch_size"]//hyperparams["accumulation_steps"], shuffle=True, collate_fn=self.collate_fn)
+        val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, collate_fn=self.collate_fn)
         # Initialize optimizer and scheduler
         optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True, factor=0.5)
@@ -87,6 +94,17 @@ class FitterMaskRCNN():
         torch.cuda.empty_cache()
         gc.collect()
         return best_map
+
+    def fit_distributed(self, id: str, model, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
+        # Initialize the process group
+        model = DDP(model)
+        train_loader = DistributedSampler(train_loader, shuffle=True)
+        val_loader = DistributedSampler(val_loader, shuffle=False)
+
+        # Call the fit method
+        best_map =self.fit(id, model, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project)
+        return best_map
+    
 
     def train_one_epoch(self, model, train_loader, optimizer, accumulation_steps):
         torch.cuda.empty_cache()
@@ -204,16 +222,6 @@ class FitterMaskRCNN():
         # save the model
         torch.save({"model_state_dict": best_checkpoint}, path)
 
-    def initialize_model(self, freeze_weights) -> nn.Module:
-        #model
-        if freeze_weights:
-            model = maskRCNNModelFreeze()
-        else:
-            model = maskRCNNModel() # TODO: Freeze the weights if we want to train under these conditions
-        model_weights = load_pretrained_weights(self.device)
-        model.load_state_dict(model_weights)
-        model.to(self.device)
-        return model
     
     def log_metric(self, losses, metric_type,run):
         for key, value in losses.items():           

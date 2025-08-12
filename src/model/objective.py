@@ -3,25 +3,40 @@ import os
 
 from optuna import Trial
 import torch
-from torch.utils.data import DataLoader
 
 from src.model.model import maskRCNNModel, maskRCNNModelFreeze
 from src.model.dataset import MaskRCNNDataset
 from src.model.engine import FitterMaskRCNN
+from src.utils.utils import load_pretrained_weights
+
 
 class Objective:
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, world_size: int = 1):
         self.config = config
+        self.world_size = world_size
     
         # Initialize the dataset
         self.collate_fn = lambda x: tuple(zip(*x))
+
+    
+    def initialize_model(self, freeze_weights) -> torch.nn.Module:
+        #model
+        if freeze_weights:
+            model = maskRCNNModelFreeze()
+        else:
+            model = maskRCNNModel() # TODO: Freeze the weights if we want to train under these conditions
+        model_weights = load_pretrained_weights(self.device)
+        model.load_state_dict(model_weights)
+        model.to(self.device)
+        return model
 
 
     def __call__(self, trial: Trial):
 
         # Get the device
-        device = "cuda" if torch.cuda.is_available() else "cpu"          
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        world_size = torch.cuda.device_count()          
         
         fitter = FitterMaskRCNN(device=device)
         # Generate the hyperparameters
@@ -46,32 +61,39 @@ class Objective:
         )
         hyperparams["n_epochs"] = self.config["n_epochs"]
         hyperparams["patience"] = self.config["patience"]
-        if hyperparams["batch_size"] > 8:
+        if hyperparams["batch_size"] > 8* world_size:
             hyperparams["accumulation_steps"] = hyperparams["batch_size"] // 8
-            loader_batch_size = 4
         else:
             hyperparams["accumulation_steps"] = 1
-            loader_batch_size = hyperparams["batch_size"]
 
         # Initialize the dataset
         if "annotator" in self.config:
             annotator = self.config["annotator"]
         else:
             annotator = None
+
+            
+
         train_dataset = MaskRCNNDataset(self.config["train_dataset_path"], datatype="train", data_augmentation=hyperparams["data_augmentation"], annotator=annotator)
         val_dataset = MaskRCNNDataset(self.config["val_dataset_path"], datatype="eval", annotator=annotator)
         test_dataset = MaskRCNNDataset(self.config["test_dataset_path"], datatype="eval")
-        # Initialize the dataloader 
-        train_loader = DataLoader(train_dataset, batch_size=loader_batch_size, shuffle=True, collate_fn=self.collate_fn)
-        val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, collate_fn=self.collate_fn)
-        test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=self.collate_fn)
+
+        # test_loader = DataLoader(test_dataset, batch_size=8, shuffle=False, collate_fn=self.collate_fn)
+        # initialize the model
+        model = self.initialize_model(hyperparams["freeze_weights"])
 
         # Train the model
         try:
-            val_mpa = fitter.fit( 
+
+            if device == "cuda":
+                fit_function = fitter.fit_distributed
+
+            else:    
+                fit_function = fitter.fit
+            val_mpa = fit_function( 
                 trial.number,
-                train_loader, 
-                val_loader, 
+                train_dataset, 
+                val_dataset, 
                 hyperparams,
                 self.config["model_dir"],
                 self.config["neptune_workspace"],
