@@ -25,35 +25,19 @@ def get_args():
     return parser.parse_args()
     
 
-def run_optuna_distributed(rank, world_size, storage_url, config):
-    ddp_setup(rank, world_size)
+def worker(rank, n_trials, storage_url, config, device):
+    device = f"cuda:{rank}" if torch.cuda.is_available() else "cpu"
+    torch.cuda.set_device(rank)
+
     study = optuna.load_study(study_name=config["neptune_project"], storage=storage_url)
-    study.optimize(Objective(config, world_size=world_size), n_trials=config["n_trials"], gc_after_trial=True)
-    destroy_process_group()
+    study.optimize(Objective(config, device=device), n_trials=n_trials, gc_after_trial=True)
 
 
-def ddp_setup(rank, world_size):
-        """
-        Args:
-            rank: Unique identifier of each process
-            world_size: Total number of processes
-        """
-        master_addr = subprocess.check_output(
-            "scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1", 
-            shell=True,
-            text=True
-        ).strip()
-        if os.environ["SYSTEMNAME"] in ["juwels", "jurecadc", "juwelsbooster", "jusuf"]:
-            master_addr += "i" #adress on the inifinity band
-
-        os.environ["MASTER_ADDR"] = master_addr
-        os.environ["MASTER_PORT"] = "12355"
-        torch.cuda.set_device(rank)
-        init_process_group(backend="nccl", rank=rank, world_size=world_size)
 
 def main():
     ### 1. Get args and initialize model + datasets (val and train)
     # args
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"  
     args = get_args()
     with open(args.config, "r") as file:
         config = yaml.safe_load(file)
@@ -64,7 +48,8 @@ def main():
 
     # set random seed
     torch.manual_seed(config["seed"])
-    if torch.cuda.is_available():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    if device == "cuda":
         torch.cuda.manual_seed_all(config["seed"])
 
     # 2. Train model
@@ -74,14 +59,17 @@ def main():
     study = optuna.create_study(direction="maximize", storage=storage_url, load_if_exists=True, study_name=config["neptune_project"])
     if torch.cuda.is_available():
         world_size = torch.cuda.device_count()
+        print(f"Number of GPUs: {world_size}")
+        # end the programm
         mp.spawn(
-            run_optuna_distributed,
-            args=(world_size, storage_url, config),
+            worker,
+            args=(config["n_trials"]//world_size, storage_url, config, device),
             nprocs=world_size,
         )
         study = optuna.load_study(study_name=config["neptune_project"], storage=storage_url)
     else:
-        study.optimize(Objective(config), n_trials=config["n_trials"], gc_after_trial=True)
+        print("No GPUs available")
+        study.optimize(Objective(config, device=device), n_trials=config["n_trials"], gc_after_trial=True)
 
     # 3. Save best trial
     print(f"Best trial: {study.best_trial.value}")

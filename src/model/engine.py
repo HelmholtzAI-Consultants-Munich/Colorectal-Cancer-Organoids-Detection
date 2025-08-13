@@ -16,8 +16,6 @@ import neptune
 from neptune.management import create_project, get_project_list
 from tqdm import tqdm
 import gc
-from torch.utils.data.distributed import DistributedSampler
-from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.data import DataLoader
 
 
@@ -32,19 +30,22 @@ class FitterMaskRCNN():
             self.device = torch.device(device)
         else:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.collate_fn = lambda x: tuple(zip(*x))
 
     def fit(self, id: str, model, train_dataset, val_dataset, hyperparams, model_dir, neptune_workspace, neptune_project):
+        print(f"Training model {id}  on device {self.device}")
         # Initialize the dataloader 
         train_loader = DataLoader(train_dataset, batch_size=hyperparams["batch_size"]//hyperparams["accumulation_steps"], shuffle=True, collate_fn=self.collate_fn)
         val_loader = DataLoader(val_dataset, batch_size=8, shuffle=False, collate_fn=self.collate_fn)
         # Initialize optimizer and scheduler
         optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, verbose=True, factor=0.5)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, factor=0.5)
         # Set up the neptune experiment
         if f"{neptune_workspace}/{neptune_project}" not in get_project_list():
             create_project(name=neptune_project, workspace=neptune_workspace)
         run = neptune.init_run(
             project=f"{neptune_workspace}/{neptune_project}", 
+            mode="offline",
         )
         run.assign({"hyperparameters": hyperparams})
         run["job_id"] = os.path.split(model_dir)[-1]
@@ -71,6 +72,7 @@ class FitterMaskRCNN():
             train_metric = self.evaluate_one_epoch(model, train_loader)
             self.log_metric(train_metric, "training_metrics", run)
             val_metric = self.evaluate_one_epoch(model, val_loader)
+            print(f"Validation mAP: {val_metric['map']}")
             self.log_metric(val_metric, "validation_metrics", run)
             # Update the scheduler
             scheduler.step(metrics=val_metric["map"])
@@ -93,16 +95,6 @@ class FitterMaskRCNN():
         del model, optimizer, scheduler, best_checkpoint
         torch.cuda.empty_cache()
         gc.collect()
-        return best_map
-
-    def fit_distributed(self, id: str, model, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project):
-        # Initialize the process group
-        model = DDP(model)
-        train_loader = DistributedSampler(train_loader, shuffle=True)
-        val_loader = DistributedSampler(val_loader, shuffle=False)
-
-        # Call the fit method
-        best_map =self.fit(id, model, train_loader, val_loader, hyperparams, model_dir, neptune_workspace, neptune_project)
         return best_map
     
 
@@ -225,7 +217,7 @@ class FitterMaskRCNN():
     
     def log_metric(self, losses, metric_type,run):
         for key, value in losses.items():           
-            run[f"{metric_type}/{key}"].append(value)
+            run[f"{metric_type}/{key}"].append(value.detach().cpu())
 
 
 

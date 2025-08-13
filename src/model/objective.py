@@ -12,12 +12,9 @@ from src.utils.utils import load_pretrained_weights
 
 class Objective:
 
-    def __init__(self, config: Dict, world_size: int = 1):
+    def __init__(self, config: Dict, device):
         self.config = config
-        self.world_size = world_size
-    
-        # Initialize the dataset
-        self.collate_fn = lambda x: tuple(zip(*x))
+        self.device = device
 
     
     def initialize_model(self, freeze_weights) -> torch.nn.Module:
@@ -34,11 +31,7 @@ class Objective:
 
     def __call__(self, trial: Trial):
 
-        # Get the device
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        world_size = torch.cuda.device_count()          
-        
-        fitter = FitterMaskRCNN(device=device)
+        fitter = FitterMaskRCNN(device=self.device)
         # Generate the hyperparameters
         hyperparams = {}
         hyperparams["batch_size"] = trial.suggest_categorical(
@@ -61,7 +54,7 @@ class Objective:
         )
         hyperparams["n_epochs"] = self.config["n_epochs"]
         hyperparams["patience"] = self.config["patience"]
-        if hyperparams["batch_size"] > 8* world_size:
+        if hyperparams["batch_size"] > 8:
             hyperparams["accumulation_steps"] = hyperparams["batch_size"] // 8
         else:
             hyperparams["accumulation_steps"] = 1
@@ -85,13 +78,9 @@ class Objective:
         # Train the model
         try:
 
-            if device == "cuda":
-                fit_function = fitter.fit_distributed
-
-            else:    
-                fit_function = fitter.fit
-            val_mpa = fit_function( 
+            val_mpa = fitter.fit( 
                 trial.number,
+                model,
                 train_dataset, 
                 val_dataset, 
                 hyperparams,

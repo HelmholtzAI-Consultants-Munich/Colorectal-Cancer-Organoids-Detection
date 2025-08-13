@@ -7,7 +7,7 @@ seed: 42
 annotator: 1
 
 ### Optimizer ###
-n_trails: 80
+n_trials: 80
 n_epochs: 150
 patience: 25
 n_gpus: 1

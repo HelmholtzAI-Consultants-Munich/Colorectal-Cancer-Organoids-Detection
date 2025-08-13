@@ -6,15 +6,12 @@ seed: 42
 anotator: 1
 
 ### Optimizer ###
-n_trails: 30
-n_epochs: 2
+n_trials: 8
+n_epochs: 1
 patience: 10
-n_gpus: 1
 batch_size:
-  - 4
-  - 8
-  - 16
   - 32
+  - 64
 learning_rate:
   min: 0.00001
   max: 0.001
@@ -27,7 +24,7 @@ data_augmentation:
 
 ### Model ###
 model_name: mask_rcnn
-model_dir: model/example
+model_dir: weights/example
 
 ### Neptune ###
 neptune_workspace: francesco-campi

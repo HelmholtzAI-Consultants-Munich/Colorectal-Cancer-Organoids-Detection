@@ -129,7 +129,7 @@ class MaskRCNNDataset(Dataset):
                     ], p=0.5),
                     # another transformatiio....
                     A.OneOf([
-                        A.Blur(blur_limit=[1,3], p=0.5),
+                        A.Blur(blur_limit=[3,4], p=0.5),
                         A.GaussNoise(p=0.5, std_range=[0.01, 0.05]),
                         A.Sharpen(p=0.5, alpha=(0.1, 0.3), lightness=(0.1, 0.3)),
                     ], p=0.5),

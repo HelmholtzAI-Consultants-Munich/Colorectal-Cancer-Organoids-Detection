@@ -5,7 +5,7 @@ test_dataset_path: dataset/test
 seed: 42
 
 ### Optimizer ###
-n_trails: 40
+n_trials: 40
 n_epochs: 150
 patience: 25
 n_gpus: 1
