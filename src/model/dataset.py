@@ -129,7 +129,7 @@ class MaskRCNNDataset(Dataset):
                     ], p=0.5),
                     # another transformatiio....
                     A.OneOf([
-                        A.Blur(blur_limit=[3,4], p=0.5),
+                        A.Blur(blur_limit=[3,5], p=0.5),
                         A.GaussNoise(p=0.5, std_range=[0.01, 0.05]),
                         A.Sharpen(p=0.5, alpha=(0.1, 0.3), lightness=(0.1, 0.3)),
                     ], p=0.5),
@@ -139,7 +139,7 @@ class MaskRCNNDataset(Dataset):
                 A.ToGray(p=1.0),
                 ToTensorV2(p=1.0)
             ],
-            bbox_params={'format': 'pascal_voc', 'min_area': 2, 'min_visibility': 0.3, 'label_fields': ['labels']},
+            bbox_params=A.BboxParams(format='pascal_voc', min_area=2, min_visibility=0.3, label_fields=['labels']),
         )
 
 
@@ -150,7 +150,7 @@ class MaskRCNNDataset(Dataset):
             ToTensorV2(p=1.0),
         ],
         p=1.0,
-        bbox_params={'format': 'pascal_voc', 'min_area': 2, 'min_visibility': 0, 'label_fields': ['labels']}
+        bbox_params=A.BboxParams(format='pascal_voc', min_area=2, min_visibility=0, label_fields=['labels'])
     )
   
 
