@@ -59,7 +59,8 @@ class MaskRCNNDataset(Dataset):
                 targets_df = targets_df[targets_df["annotator"] == self.annotator]
             else:
                 # randomly sample an annotator
-                annotator = random.choice(targets_df["annotator"].unique())
+                # annotator = random.choice(targets_df["annotator"].unique())
+                annotator = random.choice([1,2])
                 targets_df = targets_df[targets_df["annotator"] == annotator]
 
         # extract the bounding boxes and the masks tenors
