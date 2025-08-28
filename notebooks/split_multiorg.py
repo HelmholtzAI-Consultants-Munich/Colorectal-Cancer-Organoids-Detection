@@ -16,6 +16,7 @@ from src.utils.utils import *
 from src.model.dataset import MaskRCNNDataset
 
 train_dataset_path = "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train"
+output_path = "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive"
 def get_images_paths_multiorg(dataset_path):
     image_paths = []
     ext = ['jpg', 'jpeg', 'png', 'tif', 'tiff', 'bmp']
@@ -180,10 +181,10 @@ def generate_dataset(images_paths, annotations_paths, dataset_path, output_path)
             ann.to_csv(ann_path)
 
 
-generate_dataset(images_train_A, annotations_train_A, train_dataset_path, "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_A")
-generate_dataset(images_val_A, annotations_val_A, train_dataset_path, "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_A")
-generate_dataset(images_train_B, annotations_train_B, train_dataset_path, "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_B")
-generate_dataset(images_val_B, annotations_val_B, train_dataset_path, "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_B")
+generate_dataset(images_train_A, annotations_train_A, train_dataset_path, os.path.join(output_path, "train_A"))
+generate_dataset(images_val_A, annotations_val_A, train_dataset_path, os.path.join(output_path, "val_A"))
+generate_dataset(images_train_B, annotations_train_B, train_dataset_path, os.path.join(output_path, "train_B"))
+generate_dataset(images_val_B, annotations_val_B, train_dataset_path, os.path.join(output_path, "val_B"))
 
 
 def path_new_dataset(data_path, old_dataset_path, new_dataset_path):
@@ -209,19 +210,19 @@ def merge_dataset(dataset_1_path, dataset_2_path, new_dataset_path):
 
 # merge train datasets
 merge_dataset(
-    "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_A", 
-    "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_B", 
-    "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_AB")
+    os.path.join(output_path, "train_A"), 
+    os.path.join(output_path, "train_B"), 
+    os.path.join(output_path, "train_AB"))
 merge_dataset(
-    "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_A", 
-    "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_B", 
-    "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_AB")
+    os.path.join(output_path, "val_A"), 
+    os.path.join(output_path, "val_B"), 
+    os.path.join(output_path, "val_AB"))
 
 
 # check that all dataset generated are complete
-check_dataset("/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_A")
-check_dataset("/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_B")
-check_dataset("/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_AB")
-check_dataset("/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_A")
-check_dataset("/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_B")
-check_dataset("/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_AB")
+check_dataset(os.path.join(output_path, "train_A"))
+check_dataset(os.path.join(output_path, "train_B"))
+check_dataset(os.path.join(output_path, "train_AB"))
+check_dataset(os.path.join(output_path, "val_A"))
+check_dataset(os.path.join(output_path, "val_B"))
+check_dataset(os.path.join(output_path, "val_AB"))
