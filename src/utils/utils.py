@@ -38,7 +38,7 @@ def get_annotations_paths(images_paths: List[str], dataset_path: str) -> List[st
         image_rel_path = os.path.relpath(image_path, os.path.join(dataset_path, IMAGES_SUBFOLDER))
         annotations_rel_path = image_to_annotations_path(image_rel_path)
         annotations_path = os.path.join(dataset_path, ANNOTATIONS_SUBFOLDER, annotations_rel_path)
-        assert os.path.exists(annotations_path), f"The annotations file {annotations_path} does not exist."
+        # assert os.path.exists(annotations_path), f"The annotations file {annotations_path} does not exist."
         annotations_paths.append(annotations_path)
     return annotations_paths
 

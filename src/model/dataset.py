@@ -65,7 +65,7 @@ class MaskRCNNDataset(Dataset):
 
         # extract the bounding boxes and the masks tenors
         boxes = self.load_boxes(targets_df, image.shape[:-1])
-        masks = self.load_masks(targets_df, image.shape[:-1])
+        masks = self.load_masks(targets_df, image.shape[:-1], len(boxes))
         labels = [1 for _ in range(len(boxes))]
 
         
@@ -101,13 +101,16 @@ class MaskRCNNDataset(Dataset):
         boxes = clip_xyxy_to_image(boxes, image_size)
         return boxes.values
 
-    def load_masks(self, targets_df: pd.DataFrame, image_size: Tuple[int]) -> torch.Tensor:
+    def load_masks(self, targets_df: pd.DataFrame, image_size: Tuple[int], n_boxes: int) -> torch.Tensor:
         if targets_df.empty:
             return [np.zeros(image_size)]
+        if "mask" not in targets_df.columns:
+            return [np.zeros(image_size) for _ in range(n_boxes)]
         rle_masks = targets_df['mask'].values
         masks = []
         for rle in rle_masks:
             masks.append(run_length_decode(rle, image_size))
+        assert len(masks) == n_boxes
         return masks
     
     def _get_augmentation_transforms(self):

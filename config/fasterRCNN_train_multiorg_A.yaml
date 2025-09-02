@@ -1,0 +1,41 @@
+### Dataset ###
+train_dataset_path: /Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train_A
+val_dataset_path: /Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/val_A
+
+seed: 42
+annotator: 1
+
+### Optimizer ###
+n_trials: 80
+n_epochs: 150
+patience: 25
+batch_size:
+  - 8
+  - 16
+  - 32
+learning_rate:
+  min: 0.000005
+  max: 0.005
+data_augmentation: 
+  - True
+  - False
+backbone:
+  - 18
+  - 34
+  - 50
+  - 101
+trainable_layers:
+  - 2
+  - 3
+  - 4
+  - 5
+
+### Model ###
+model_name: faster_rcnn
+model_dir: model/fine_tune_multiorg_A
+
+### Neptune ###
+neptune_workspace: francesco-campi
+neptune_project: Multiorg-A
+
+

@@ -157,4 +157,4 @@ def fill_empty_masks(masks: torch.Tensor, bboxes: torch.Tensor) -> np.ndarray:
             mask = torch.tensor(mask, dtype=torch.uint8)
             mask = mask.unsqueeze(0)
             masks[i] = mask
-    return masks
+    return masks 
