@@ -15,8 +15,8 @@ from src.utils.const import *
 from src.utils.utils import *
 from src.model.dataset import MaskRCNNDataset
 
-train_dataset_path = "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive/train"
-output_path = "/Volumes/Extreme_SSD/Gastrointestinal_voucher/archive"
+train_dataset_path = "/p/project1/hai_hmgu/workspace/campif/Colorectal-Cancer-Organoids-Detection/dataset/multiorg/train"
+output_path = "/p/project1/hai_hmgu/workspace/campif/Colorectal-Cancer-Organoids-Detection/dataset/multiorgls"
 def get_images_paths_multiorg(dataset_path):
     image_paths = []
     ext = ['jpg', 'jpeg', 'png', 'tif', 'tiff', 'bmp']

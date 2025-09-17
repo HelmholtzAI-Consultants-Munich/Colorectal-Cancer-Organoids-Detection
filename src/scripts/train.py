@@ -61,9 +61,10 @@ def main():
         world_size = torch.cuda.device_count()
         print(f"Number of GPUs: {world_size}")
         # end the programm
+        n_trials_per_GPU = config["n_trials"] // world_size
         mp.spawn(
             worker,
-            args=(config["n_trials"]//world_size, storage_url, config, device),
+            args=(n_trials_per_GPU, storage_url, config, device),
             nprocs=world_size,
         )
         study = optuna.load_study(study_name=config["neptune_project"], storage=storage_url)
@@ -84,4 +85,5 @@ def main():
     pass
 
 if __name__ == '__main__':
+    mp.set_start_method("spawn", force=True)
     main()

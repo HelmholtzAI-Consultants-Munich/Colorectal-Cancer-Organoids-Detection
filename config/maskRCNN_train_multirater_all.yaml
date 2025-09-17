@@ -1,7 +1,8 @@
 ### Dataset ###
-train_dataset_path: dataset/train
-val_dataset_path: dataset/val
-test_dataset_path: dataset/test
+train_dataset_path: dataset/train_multirater
+val_dataset_path: dataset/val_multirater_all
+test_dataset_path: dataset/test_multirater
+
 seed: 42
 
 ### Optimizer ###
@@ -20,14 +21,15 @@ freeze_weights:
   - True
   - False
 data_augmentation: 
+  - True
   - False
 
 ### Model ###
 model_name: mask_rcnn
-model_dir: weights/fine_tune_no_aug
+model_dir: weights/fine_tune_multirater_all
 
 ### Neptune ###
 neptune_workspace: francesco-campi
-neptune_project: DKFZ-Organoid-Detection-no-aug
+neptune_project: DKFZ-Organoid-Detection-multirater-all
 
 

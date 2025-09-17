@@ -41,8 +41,8 @@ class FitterMaskRCNN():
         optimizer = torch.optim.Adam(model.parameters(), lr=hyperparams["learning_rate"])
         scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=10, factor=0.5)
         # Set up the neptune experiment
-        if f"{neptune_workspace}/{neptune_project}" not in get_project_list():
-            create_project(name=neptune_project, workspace=neptune_workspace)
+        # if f"{neptune_workspace}/{neptune_project}" not in get_project_list():
+        #     create_project(name=neptune_project, workspace=neptune_workspace)
         run = neptune.init_run(
             project=f"{neptune_workspace}/{neptune_project}", 
             mode="offline",

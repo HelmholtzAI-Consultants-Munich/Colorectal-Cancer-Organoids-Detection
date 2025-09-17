@@ -19,3 +19,5 @@ inference
 *.pyc
 inference_output
 weights
+dataset
+.orga

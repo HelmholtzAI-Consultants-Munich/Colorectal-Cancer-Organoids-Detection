@@ -1,6 +1,6 @@
 ### Dataset ###
-train_dataset_path: dataset/multiorg_split/train_A
-val_dataset_path: dataset/multiorg_split/val_A
+train_dataset_path: dataset/multiorg_split/train_B
+val_dataset_path: dataset/multiorg_split/val_B
 
 seed: 42
 annotator: 1
@@ -13,6 +13,7 @@ batch_size:
   - 8
   - 16
   - 32
+  - 64
 learning_rate:
   min: 0.000005
   max: 0.005
@@ -32,10 +33,10 @@ trainable_layers:
 
 ### Model ###
 model_name: faster_rcnn
-model_dir: model/fine_tune_multiorg_A
+model_dir: model/fine_tune_multiorg_B
 
 ### Neptune ###
 neptune_workspace: francesco-campi
-neptune_project: Multiorg-A
+neptune_project: Multiorg-B
 
 
