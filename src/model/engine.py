@@ -159,6 +159,7 @@ class FitterMaskRCNN():
             # Forward pass
             prediction = model(images)
             prediction = [{k: v.detach().cpu() for k, v in p.items()} for p in prediction]
+            targets = [{k: v.cpu() for k, v in t.items()} for t in targets]
             map.update(prediction, targets)
             # Filter predictions
             predictions.extend(self.filter_predicitons(prediction, confidence_threshold))

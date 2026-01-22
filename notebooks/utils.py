@@ -117,19 +117,21 @@ def bin_predictions(detections: pd.DataFrame, bins_extremes: list, labels: list)
     bins["interval"] = bins_extremes[1:]
     return bins
 
+
 def plot_calibration(detections: dict, dataset: str, iou: float, bins_extremes: list, labels: list)->float:
     bins = bin_predictions(detections.copy(), bins_extremes, labels)
     # sns.barplot(data=bins, x="interval", y="match")
-    plt.figure(figsize=(7, 7))
+    plt.figure(figsize=(3.4, 3.4))
     
-    bars = plt.bar(x=bins["interval"]- 0.05, height=bins["match"], width=0.09, edgecolor='black', label='Model Calibration')
+    bars = plt.bar(x=bins["interval"]- 0.05, height=bins["match"], width=0.09, edgecolor='black', label='Outputs')
     plt.bar(x=bins["interval"]- 0.05, height=bins["confidence"] - bins["match"], bottom=bins["match"], color=('red', 0.25), width=0.09, label='Calibration Gap', edgecolor=('red', 0.5))
     plt.bar_label(bars, fmt='%.2f')
     # plt.bar_label(bins["match"].to_list())
     plt.ylabel(f"Precision at IoU {iou}")
-    plt.plot(bins_extremes, bins_extremes, color='red', linestyle='--')
+    plt.xlabel("Confidence")
+    # plt.plot(bins_extremes, bins_extremes, color='red', linestyle='--')
     plt.legend()
-    plt.title(f"Calibration Plot at IoU {iou} for {dataset} Dataset")
+    # plt.title(f"Calibration Plot at IoU {iou} for {dataset} Dataset")
     plt.show()
     ce = compute_calibration_error(bins)
     print(f"Calibration Error at IoU {iou}: {ce:.2f}")
@@ -206,7 +208,7 @@ def ensemble_merge_predictions(predictions: dict, iou_threshold: float):
     return merged_predictions
 
 def compute_map(predictions, dataset):
-    map_metric = MeanAveragePrecision(iou_type="bbox", class_metrics=True)
+    map_metric = MeanAveragePrecision(iou_type="bbox", class_metrics=True, max_detection_thresholds= [10, 100, 1000])
     labels_list = []
     for i in range(len(dataset)):
         _, labels = dataset[i]

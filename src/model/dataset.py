@@ -99,6 +99,13 @@ class MaskRCNNDataset(Dataset):
             return [] #np.empty((0,4))
         boxes = targets_df[['x1', 'y1', 'x2', 'y2']]
         boxes = clip_xyxy_to_image(boxes, image_size)
+        # check no boxes have inverted coordinates
+        for _, box in boxes.iterrows():
+            if box['x2'] <= box['x1']:
+                # swap them
+                box['x1'], box['x2'] = box['x2'], box['x1']
+            if box['y2'] <= box['y1']:
+                box['y1'], box['y2'] = box['y2'], box['y1']
         return boxes.values
 
     def load_masks(self, targets_df: pd.DataFrame, image_size: Tuple[int], n_boxes: int) -> torch.Tensor:
