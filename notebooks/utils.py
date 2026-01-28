@@ -137,6 +137,28 @@ def plot_calibration(detections: dict, dataset: str, iou: float, bins_extremes: 
     print(f"Calibration Error at IoU {iou}: {ce:.2f}")
     return ce
 
+def plot_calibration_ious(detections: dict, dataset: str, bins_extremes: list, labels: list)->list:
+    ce = {}
+    plt.figure(figsize=(3.4, 3.4))
+    for iou, detections_iou in detections.items():
+        # plot a for different ious the calibaration plot in the same plot using trasparency for each iou
+        bins = bin_predictions(detections_iou.copy(), bins_extremes, labels)
+        # sns.barplot(data=bins, x="interval", y="match")
+        
+        bars = plt.bar(x=bins["interval"]- 0.05, height=bins["match"], width=0.09, edgecolor='black', label='Outputs')
+        plt.bar(x=bins["interval"]- 0.05, height=bins["confidence"] - bins["match"], bottom=bins["match"], color=('red', 0.25), width=0.09, label='Calibration Gap', edgecolor=('red', 0.5))
+        plt.bar_label(bars, fmt='%.2f')
+        # plt.bar_label(bins["match"].to_list())
+        plt.ylabel(f"Precision at IoU {iou}")
+        plt.xlabel("Confidence")
+        # plt.plot(bins_extremes, bins_extremes, color='red', linestyle='--')
+        plt.legend()
+        # plt.title(f"Calibration Plot at IoU {iou} for {dataset} Dataset")
+        plt.show()
+        ce = compute_calibration_error(bins)
+        print(f"Calibration Error at IoU {iou}: {ce:.2f}")
+    return ce
+
 def compute_iou_group(group, bboxes):
     iou_matrix = compute_iou_matrix(group,bboxes)
     return np.min(iou_matrix, axis=0)
